@@ -1,0 +1,22 @@
+# macOS metadata
+.DS_Store
+
+# Generated report output (including the default output of a direct pdflatex run)
+/report/build/
+/report/report.pdf
+
+# LaTeX intermediate files within the report directory
+/report/**/*.aux
+/report/**/*.bbl
+/report/**/*.bcf
+/report/**/*.blg
+/report/**/*.fdb_latexmk
+/report/**/*.fls
+/report/**/*.lof
+/report/**/*.log
+/report/**/*.lot
+/report/**/*.out
+/report/**/*.run.xml
+/report/**/*.synctex.gz
+/report/**/*.toc
+/report/**/*.xdv
