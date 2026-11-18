@@ -65,3 +65,7 @@ the current shell and try again:
 export PATH="/Library/TeX/texbin:$PATH"
 ```
 
+## Report draft and presentation slides
+
+- [Report draft (Google Docs)](https://docs.google.com/document/d/1-2sz6M0IZ_1TCE7WXlljw7BMHPN3UOZlgvDi-0xLGdE/edit?usp=sharing)
+- [Presentation slides (Google Slides)](https://docs.google.com/presentation/d/1UMGA1gGIlv03YM7jHCzXXs9Cm_lsRJMi1Lr9iYceKZc/edit?slide=id.p#slide=id.p)
