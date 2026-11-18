@@ -8,12 +8,18 @@ a placeholder until it is finalized.
 - Samsam Lee
 - Kian Dianati
 
-## Reference papers
+## References
 
 1. Michael Deistler et al. (2025). [Simulation-Based Inference: A Practical Guide](https://arxiv.org/abs/2508.12939). arXiv:2508.12939.
 2. Kyle Cranmer, Johann Brehmer, and Gilles Louppe (2019). [The frontier of simulation-based inference](https://arxiv.org/abs/1911.01429). arXiv:1911.01429.
+3. Christoph Weniger (2026). [Lecture 1: ABC and Neural SBI](https://cweniger.github.io/teaching-2608-IAIFI/lecture1.html). IAIFI PhD School, University of Amsterdam.
 
-Add or remove paper entries as needed.
+The lecture provides interactive teaching examples alongside the research papers.
+
+## Simulation examples
+
+- [Line regression with a normalizing flow](simulations/line-regressor/README.md).
+- [Ball projectile: infer a launch angle from its landing distance](simulations/ball-projectile/README.md). Includes a worked notebook and a report with mathematical derivations.
 
 ## Report workflow
 
@@ -38,9 +44,13 @@ research direction. Give more space to the directions that warrant deeper study.
 .
 ├── README.md
 ├── .gitignore
+├── reference-papers/   # Assigned papers
+├── simulations/
+│   ├── line-regressor/
+│   └── ball-projectile/
 └── report/
-    ├── report.tex       # Editable report source
-    └── build/           # Generated PDF and LaTeX files; ignored by Git
+    ├── report.tex       # Main course report source
+    └── build/           # Generated main report files; ignored by Git
 ```
 
 ## Build the report on macOS

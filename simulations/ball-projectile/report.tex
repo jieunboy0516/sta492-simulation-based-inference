@@ -1,0 +1,365 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=20mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,graphicx,booktabs,microtype}
+\usepackage[hidelinks]{hyperref}
+\input{glyphtounicode}
+\pdfgentounicode=1
+\hypersetup{pdftitle={Inferring a ball's launch angle with a normalizing flow}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\abovedisplayskip}{7pt}
+\setlength{\belowdisplayskip}{7pt}
+\raggedbottom
+\newcommand{\E}{\mathbb E}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\sigmoid}{\operatorname{sigmoid}}
+\newcommand{\Ang}{\mathsf A}
+\newcommand{\figpath}{results/figures/}
+\input{results/report_numbers.tex}
+
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Inferring a ball's launch angle}\\[5pt]
+{\large A worked example of neural posterior estimation with a normalizing flow}\\[4pt]
+{\small STA492: simulation, probability, derivations, and measured results}
+\end{center}
+
+\section*{1. From an angle to a landing distance}
+We observe one number, the distance at which a ball lands, and want a
+distribution over its launch angle. Different angles can give similar ranges;
+the answer can therefore have two peaks. This example adapts the introductory
+ball simulator in Deistler et al.\ \cite{guide} and accompanies Weniger's SBI
+lecture \cite{lecture}. We omit air resistance to make the physics explicit,
+use SI constants, and choose Gaussian measurement noise. These choices differ
+from the guide's numerical code \cite{guidecode}; this is not an exact reproduction.
+
+Write $\alpha$ for the angle in degrees and $\theta=\pi\alpha/180$ for the
+same angle in radians. The initial speed is $v_0=13\,\mathrm{m/s}$ and gravity
+is $g=9.81\,\mathrm{m/s^2}$. During one throw, $w\geq0$ is a constant
+horizontal acceleration caused by tailwind. With no drag,
+\[
+ \ddot X(t)=w,\qquad \ddot Y(t)=-g,
+ \quad X(0)=Y(0)=0,\quad
+ \dot X(0)=v_0\cos\theta,\quad \dot Y(0)=v_0\sin\theta.
+\]
+Integrating once gives $\dot X(t)=v_0\cos\theta+wt$ and
+$\dot Y(t)=v_0\sin\theta-gt$. Integrating again gives
+\[
+ X(t)=v_0\cos\theta\,t+\tfrac12wt^2,\qquad
+ Y(t)=v_0\sin\theta\,t-\tfrac12gt^2.
+\]
+To find the landing time, factor the height equation:
+$Y(T)=T(v_0\sin\theta-gT/2)=0$. The root $T=0$ is the start; the other is
+\[
+ T(\alpha)=\frac{2v_0\sin\theta}{g}.
+\]
+Substitute it into $X(t)$ and use $2\sin\theta\cos\theta=\sin(2\theta)$:
+\begin{equation}
+ \boxed{D(\alpha,w)=A(\alpha)+B(\alpha)w,\quad
+ A(\alpha)=\frac{v_0^2}{g}\sin(2\theta),\quad
+ B(\alpha)=\tfrac12T(\alpha)^2.}
+ \label{eq:range}
+\end{equation}
+$A$ is a distance, $B$ has units $\mathrm{s^2}$, and $Bw$ is a distance.
+Wind here is an acceleration, not a wind speed. The simulator calculates this
+formula directly; it does not discretize time. Trajectories illustrate the
+physics, but only the final measured distance is used for inference.
+
+\begin{center}
+\includegraphics[width=0.97\linewidth]{\figpath trajectories.pdf}\\[-2pt]
+{\small Two no-wind angles can share a range; different winds change the range at a fixed angle.}
+\end{center}
+
+\newpage
+\section*{2. From deterministic physics to a probability model}
+Before observing a distance, use a Normal angle distribution truncated to
+$0<\alpha<90$ degrees. Let $\varphi$ and $\Phi$ be the standard Normal density
+and CDF. Its normalized density per degree is
+\[
+ p(\alpha)=\frac{\varphi((\alpha-35)/15)}{15C}\,\mathbf1_{(0,90)}(\alpha),
+ \qquad C=\Phi\!\left(\frac{90-35}{15}\right)-\Phi\!\left(\frac{-35}{15}\right).
+\]
+The numbers 35 and 15 describe the Normal before truncation. Each simulated
+throw draws independent wind and measurement error:
+\[
+ W\sim\operatorname{Exp}(\lambda),\quad \lambda=2,
+ \qquad \varepsilon\sim N(0,\sigma_x^2),\quad \sigma_x=0.25\,\mathrm m,
+ \qquad x=A(\alpha)+B(\alpha)W+\varepsilon.
+\]
+Thus $\E W=1/\lambda=0.5\,\mathrm{m/s^2}$ and
+$\Var W=1/\lambda^2$. Independence and \eqref{eq:range} give useful checks:
+\[
+ \E[x\mid\alpha]=A(\alpha)+B(\alpha)/\lambda,\qquad
+ \Var(x\mid\alpha)=\sigma_x^2+B(\alpha)^2/\lambda^2.
+\]
+Given angle and wind, the density is Gaussian:
+$p(x\mid\alpha,w)=N(x;A(\alpha)+B(\alpha)w,\sigma_x^2)$.
+We infer only the angle, so the likelihood must average over unobserved wind:
+\begin{equation}
+ p(x\mid\alpha)=\int_0^\infty
+ N(x;A(\alpha)+B(\alpha)w,\sigma_x^2)\,\lambda e^{-\lambda w}\,dw.
+ \label{eq:marginal}
+\end{equation}
+Sampling wind inside the simulator generates this marginal distribution
+automatically. Holding it fixed would define a different inference problem.
+Bayes' theorem gives
+\begin{equation}
+ p(\alpha\mid x_o)=\frac{p(x_o\mid\alpha)p(\alpha)}{p(x_o)},\qquad
+ p(x_o)=\int_0^{90}p(x_o\mid a)p(a)\,da.
+ \label{eq:bayes}
+\end{equation}
+Without wind or measurement noise, solve $x_o=(v_0^2/g)\sin(2\theta)$.
+For $0<gx_o/v_0^2<1$, the two solutions are
+\[
+ \theta_1=\tfrac12\arcsin(gx_o/v_0^2),\qquad
+ \theta_2=\pi/2-\theta_1.
+\]
+For $x_o=13\,\mathrm m$ these are $24.50^\circ$ and $65.50^\circ$.
+Noise broadens the possibilities. The asymmetric prior and angle-dependent
+wind effect change the branches' positions and weights; the noisy posterior
+is not simply two equal spikes at complementary angles.
+
+\begin{center}
+\includegraphics[width=0.94\linewidth]{\figpath prior_and_joint.pdf}\\[-2pt]
+{\small Prior angles generate joint pairs $(\alpha,x)$; observations select conditional angle distributions.}
+\end{center}
+
+\newpage
+\section*{3. Why learning from simulations targets a posterior}
+An NPE dataset is generated in the forward direction:
+$\alpha_i\sim p(\alpha)$, followed by $x_i\sim p(x\mid\alpha_i)$.
+Each pair follows $p(\alpha,x)=p(\alpha)p(x\mid\alpha)$.
+The neural network represents a normalized conditional density
+$q_\phi(\alpha\mid x)$, with trainable weights $\phi$. Minimize
+\[
+ \widehat{\mathcal L}(\phi)=-\frac1N\sum_{i=1}^N\log q_\phi(\alpha_i\mid x_i).
+\]
+The network receives a distance and is rewarded for assigning higher density
+to the angle that generated it. For continuous variables this is a density,
+not a probability of equality to one exact angle. The target is a distribution,
+not a mean-squared-error prediction of a single angle.
+
+Let $\Ang$ denote the random angle in degrees and $X$ the random distance.
+Using $p(\alpha,x)=p(x)p(\alpha\mid x)$, the population loss is
+\begin{align*}
+ \mathcal L(\phi)
+ &=-\int p(x)\int p(\alpha\mid x)\log q_\phi(\alpha\mid x)\,d\alpha\,dx\\
+ &=\int p(x)\int p(\alpha\mid x)
+ \left[-\log p(\alpha\mid x)
+ +\log\frac{p(\alpha\mid x)}{q_\phi(\alpha\mid x)}\right]d\alpha\,dx\\
+ &=\underbrace{H_p(\Ang\mid X)}_{\text{independent of }\phi}
+ +\E_{p(x)}\!\left[\KL\{p(\alpha\mid x)\Vert q_\phi(\alpha\mid x)\}\right].
+\end{align*}
+The second line adds and subtracts the true posterior log-density. KL is
+nonnegative: $\log t\leq t-1$ implies
+$\int p\log(p/q)\geq\int(p-q)=0$ on the common support.
+Hence minimizing the population NPE loss minimizes average posterior KL.
+Equality with the true posterior requires sufficient model capacity and an
+attained global population optimum, for almost every prior-predictive $x$.
+Finite simulations, limited capacity, and imperfect optimization leave error.
+
+\textbf{The actual training procedure.}
+We generate 20,000 pairs once (NumPy seed 2026), split them randomly into
+18,000 training and 2,000 validation pairs, and standardize distances using
+training statistics only. With PyTorch seed 42, Adam uses learning rate
+$10^{-3}$, batches of 256, and gradient norm clipping at 5. There are at most
+100 epochs; an epoch is one pass through the training pairs. We stop after
+15 epochs without a validation improvement of $10^{-4}$ and restore the
+best validation weights. No reference likelihood is used during training.
+The supplied run completed \EpochsRun{} epochs, restored epoch \BestEpoch{},
+and took \TrainSeconds{} CPU seconds with two PyTorch threads.
+
+\begin{center}
+\includegraphics[width=0.80\linewidth]{\figpath training.pdf}\\[-2pt]
+{\small Training optimizes simulated-pair log density; validation selects the saved weights.}
+\end{center}
+The same trained network then handles 13, 15, and 16 metres without further
+optimization. This reuse is called \emph{amortized inference}.
+
+\newpage
+\section*{4. How a normalizing flow represents two angle peaks}
+A flow generates samples by transforming $z\sim N(0,1)$ through an invertible
+map. Here $z\to u$ consists of three increasing rational-quadratic spline
+maps conditioned on the distance \cite{spline,nflows}. Finally,
+\[
+ \alpha=90\sigmoid(u),\qquad
+ u=\log\frac{\alpha}{90-\alpha},\qquad
+ \frac{d\alpha}{du}=90\sigmoid(u)\sigmoid(-u).
+\]
+This enforces the angle bounds without clipping. Probability is conserved:
+$q_\phi(\alpha\mid x)\,d\alpha=p_Z(z)\,dz$. Therefore
+\begin{equation}
+ \log q_\phi(\alpha\mid x)=\log p_Z(z)
+ +\log\left|\frac{dz}{d\alpha}\right|.
+ \label{eq:flow}
+\end{equation}
+Density evaluation runs angle $\to u\to z$, the inverse of sampling.
+In the code, spline \texttt{forward} means the density-evaluation direction,
+and \texttt{inverse=True} means the sampling direction. With
+$f=\alpha/90$, the angle-to-$u$ log-Jacobian is
+$-\log90-\log f-\log(1-f)$. We add each spline log-Jacobian along the chain.
+All densities are per degree; changing angle units would require its own
+Jacobian. We assign density zero outside the box and at the endpoints,
+which have probability zero.
+
+\textbf{One spline bin, explicitly.}
+Consider an increasing map $S$ taking $u_k$ to $v_k$ and $u_{k+1}$ to
+$v_{k+1}$. Define bin width $w_k=u_{k+1}-u_k>0$, height
+$h_k=v_{k+1}-v_k>0$, secant slope $\delta_k=h_k/w_k$, and
+$\xi=(u-u_k)/w_k\in[0,1]$. Let $d_k,d_{k+1}>0$ be endpoint derivatives.
+The bin formula is
+\begin{equation}
+ S(u)=v_k+h_k\,
+ \frac{\delta_k\xi^2+d_k\xi(1-\xi)}
+ {\delta_k+(d_{k+1}+d_k-2\delta_k)\xi(1-\xi)}.
+ \label{eq:spline}
+\end{equation}
+At $\xi=0$ it equals $v_k$; at $\xi=1$ it equals $v_k+h_k=v_{k+1}$.
+Apply the quotient rule and $d\xi/du=1/w_k$ to obtain
+\begin{equation}
+ S'(u)=\frac{\delta_k^2
+ [d_{k+1}\xi^2+2\delta_k\xi(1-\xi)+d_k(1-\xi)^2]}
+ {[\delta_k+(d_{k+1}+d_k-2\delta_k)\xi(1-\xi)]^2}>0.
+ \label{eq:derivative}
+\end{equation}
+This positivity ensures invertibility. The log absolute derivative in
+\eqref{eq:flow} is cheap to evaluate. Inversion solves the quadratic obtained
+by rearranging \eqref{eq:spline}; \texttt{nflows} handles the root calculation.
+
+Each layer has 16 bins. Its network maps one standardized distance through
+two 32-unit tanh hidden layers to 47 outputs: 16 raw widths, 16 raw heights,
+and 15 raw interior derivatives. Softmax makes widths/heights positive;
+softplus plus a small positive floor makes derivatives positive. The spline
+maps $[-5,5]$ onto itself and is the identity outside; endpoint derivatives
+are fixed to one. Initialization uses equal widths/heights and unit slopes.
+Only this spline arithmetic is borrowed from the library; the conditioning
+networks, bounded-angle transformation, training, and sampling are explicit.
+
+An increasing map need not yield a unimodal density. In the sampling
+direction, $q_\phi(\alpha\mid x)=p_Z(z)/|d\alpha/dz|$: different regions
+can squeeze samples more tightly, creating two density peaks while keeping
+their order. Normalization of the model alone does not imply posterior accuracy.
+
+\begin{center}
+\includegraphics[width=0.90\linewidth]{\figpath flow_map.pdf}\\[-2pt]
+{\small The sampling map changes sample spacing, producing a density with two angle peaks.}
+\end{center}
+
+\newpage
+\section*{5. What the trained network learned}
+The three distances are hypothetical observations, with no single known
+generating angle. A numerical reference evaluates \eqref{eq:marginal} using
+adaptive quadrature. Substituting $q=\lambda w$ gives the convenient integrand
+$e^{-q}N(x_o;A+Bq/\lambda,\sigma_x^2)$ over $q\in[0,\infty)$.
+Multiplying by the prior and normalizing over the full angle interval gives
+\eqref{eq:bayes}. This calculation checks the trained model; it never supplies
+training targets or gradients.
+
+\begin{center}
+\includegraphics[width=\linewidth]{\figpath posterior_comparison.pdf}\\[-2pt]
+{\small One trained flow (dashed blue), numerical references (black), and the prior (gray).}
+\end{center}
+
+Define $P_{<45}=P(\alpha<45^\circ\mid x_o)$. This is a fixed low-angle
+partition, not a fitted boundary between modes. Total variation is
+\[
+ \operatorname{TV}(p,q)=\tfrac12\int_0^{90}|p(\alpha\mid x_o)-q_\phi(\alpha\mid x_o)|\,d\alpha.
+\]
+It ranges from zero to one. For midpoint grid spacing $\Delta\alpha$, we
+approximate it by $\tfrac12\sum_j|p_j-q_j|\Delta\alpha$. The learned density
+is not renormalized on the grid; its original integral is reported separately.
+
+\begin{center}
+\small
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+$x_o$ (m) & Ref.\ modes ($^\circ$) & Ref.\ $P_{<45}$ & Flow $P_{<45}$ & TV & Flow integral\\
+\midrule
+\input results/accuracy_rows.tex
+\bottomrule
+\end{tabular}\\[3pt]
+{\small Densities use a 4,000-point grid; posterior sampling uses 20,000 draws per observation.}
+\end{center}
+
+Reference grids of 2,000 and 4,000 points change the mean by at most
+\texttt{\MaxMeanChange} degrees and $P_{<45}$ by at most
+\texttt{\MaxBranchChange}. Learned-grid refinement changes TV by at most
+\texttt{\MaxTVChange} and the integral by at most \texttt{\MaxMassChange}.
+An integral near one checks quadrature, not agreement with the reference.
+The complete values and wind integration error estimates are saved with the run.
+
+All three learned densities retain two peaks, with small location shifts and
+slightly too much probability below $45^\circ$. Thus the qualitative ambiguity
+is recovered, but the learned answer is still approximate.
+The prior favors angles near $35^\circ$, so low and high branches need not
+receive equal weight. A posterior mean can fall in the valley between peaks,
+and a central credible interval can include that valley. Both can obscure
+which angles actually have high posterior density. Compare the full density
+and branch weights, including visible shifts or missing mass, before interpreting
+one summary as the inferred launch.
+
+\newpage
+\section*{6. Predictive checks, verification, and reproducibility}
+For a future throw with the same unknown angle but independent wind and noise,
+the posterior predictive distribution is
+\[
+ p(x_{\rm new}\mid x_o)=\int p(x_{\rm new}\mid\alpha)
+ p(\alpha\mid x_o)\,d\alpha.
+\]
+We approximate it by drawing $\alpha$ from the flow posterior and then calling
+the simulator with a \emph{new} wind and measurement error. We do not reuse
+the latent wind that could have produced the original observation.
+
+\begin{center}
+\includegraphics[width=0.95\linewidth]{\figpath posterior_predictive.pdf}\\[-2pt]
+{\small Posterior predictive landing distances; dashed lines mark the conditioning observations.}
+\end{center}
+
+A future throw need not reproduce $x_o$ exactly. Predictive width comes from
+uncertain angles and new random effects. These plots check consistency under
+our assumed model, not agreement with independent real observations. A good
+predictive plot alone cannot certify a correct angle posterior, since different
+angles can predict similar ranges.
+
+\textbf{What was tested.}
+Ten tests check the landing time and no-wind range, complementary-angle
+symmetry, the integrated wind effect, simulated conditional means/variances,
+prior support and normalization, reference refinement, flow inversion,
+Jacobian agreement with automatic differentiation, density integration,
+finite training gradients, and saved standardization. The executed notebook
+also checks support, learned integrals, grid refinement, and density agreement
+after reloading the checkpoint.
+
+\textbf{Limits.}
+This is one training run and three distances, not a repeated-dataset coverage
+study. Exact change of variables does not remove neural approximation error.
+Air resistance, time-varying wind, uncertain speed, and uncertain gravity are
+omitted. Gaussian noise can yield negative recorded ranges; we do not clip them.
+The posterior answers the assumed model's question. New data under that model
+can reuse the network; changing the simulator or prior requires retraining.
+
+\textbf{How to reproduce.}
+Start with \texttt{projectile\_demo.ipynb}; the README gives setup and run commands.
+Use \texttt{python3 run\_notebook.py} for a fresh kernel and
+\texttt{python3 -m unittest -v} for tests. Settings, seeds, versions, weights,
+arrays, metrics, and figures are in \texttt{results/}. The notebook generates the
+report table; rebuild the PDF and review its interpretation after a changed run.
+
+\begingroup
+\small\raggedright
+\begin{thebibliography}{9}
+\bibitem{guide} M. Deistler et al.\ (2025). \emph{Simulation-Based Inference: A Practical Guide}.
+\href{https://arxiv.org/abs/2508.12939}{arXiv:2508.12939}, Section 2 and Figure 2.
+\bibitem{guidecode} SBI developers. \emph{Ball-throw example accompanying the practical guide}.
+\href{https://github.com/sbi-dev/sbi-practical-guide/blob/main/examples/ball_throw.ipynb}{Source notebook}.
+\bibitem{lecture} C. Weniger (2026). \emph{Lecture 1: ABC and Neural SBI}. IAIFI PhD School.
+\href{https://cweniger.github.io/teaching-2608-IAIFI/lecture1.html}{Teaching material}.
+\bibitem{spline} C. Durkan, A. Bekasov, I. Murray, and G. Papamakarios (2019).
+\emph{Neural Spline Flows}. NeurIPS. \href{https://arxiv.org/abs/1906.04032}{arXiv:1906.04032}.
+\bibitem{nflows} C. Durkan et al.\ (2020). \emph{nflows: normalizing flows in PyTorch}, v0.14.
+\href{https://github.com/bayesiains/nflows}{Software repository}.
+\end{thebibliography}
+\endgroup
+\end{document}

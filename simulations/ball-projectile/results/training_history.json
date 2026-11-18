@@ -1,0 +1,232 @@
+[
+  {
+    "epoch": 1,
+    "training_nll": 3.190544707192315,
+    "validation_nll": 2.9416775703430176
+  },
+  {
+    "epoch": 2,
+    "training_nll": 2.758447842491998,
+    "validation_nll": 2.7681336402893066
+  },
+  {
+    "epoch": 3,
+    "training_nll": 2.6575481014251707,
+    "validation_nll": 2.80507230758667
+  },
+  {
+    "epoch": 4,
+    "training_nll": 2.58797306060791,
+    "validation_nll": 2.5492331981658936
+  },
+  {
+    "epoch": 5,
+    "training_nll": 2.5487335851457384,
+    "validation_nll": 2.631420850753784
+  },
+  {
+    "epoch": 6,
+    "training_nll": 2.5587241181267633,
+    "validation_nll": 2.509444236755371
+  },
+  {
+    "epoch": 7,
+    "training_nll": 2.516927271736993,
+    "validation_nll": 2.492971181869507
+  },
+  {
+    "epoch": 8,
+    "training_nll": 2.526443579143948,
+    "validation_nll": 2.6811933517456055
+  },
+  {
+    "epoch": 9,
+    "training_nll": 2.563892109129164,
+    "validation_nll": 2.44224214553833
+  },
+  {
+    "epoch": 10,
+    "training_nll": 2.5390112664964466,
+    "validation_nll": 2.4722163677215576
+  },
+  {
+    "epoch": 11,
+    "training_nll": 2.4998491363525392,
+    "validation_nll": 2.48354434967041
+  },
+  {
+    "epoch": 12,
+    "training_nll": 2.515640719095866,
+    "validation_nll": 2.4432125091552734
+  },
+  {
+    "epoch": 13,
+    "training_nll": 2.4893378965589736,
+    "validation_nll": 2.489820957183838
+  },
+  {
+    "epoch": 14,
+    "training_nll": 2.4887885553571913,
+    "validation_nll": 2.4406466484069824
+  },
+  {
+    "epoch": 15,
+    "training_nll": 2.469897466023763,
+    "validation_nll": 2.496163845062256
+  },
+  {
+    "epoch": 16,
+    "training_nll": 2.4747873073154025,
+    "validation_nll": 2.455172061920166
+  },
+  {
+    "epoch": 17,
+    "training_nll": 2.4667863235473635,
+    "validation_nll": 2.3888680934906006
+  },
+  {
+    "epoch": 18,
+    "training_nll": 2.4540911055670844,
+    "validation_nll": 2.4581711292266846
+  },
+  {
+    "epoch": 19,
+    "training_nll": 2.464424639807807,
+    "validation_nll": 2.4210047721862793
+  },
+  {
+    "epoch": 20,
+    "training_nll": 2.460745537439982,
+    "validation_nll": 2.408670425415039
+  },
+  {
+    "epoch": 21,
+    "training_nll": 2.481288597530789,
+    "validation_nll": 2.4621694087982178
+  },
+  {
+    "epoch": 22,
+    "training_nll": 2.467259526570638,
+    "validation_nll": 2.4063384532928467
+  },
+  {
+    "epoch": 23,
+    "training_nll": 2.459522512859768,
+    "validation_nll": 2.4278197288513184
+  },
+  {
+    "epoch": 24,
+    "training_nll": 2.4836747398376464,
+    "validation_nll": 2.425748348236084
+  },
+  {
+    "epoch": 25,
+    "training_nll": 2.4811167517768014,
+    "validation_nll": 2.4455673694610596
+  },
+  {
+    "epoch": 26,
+    "training_nll": 2.4539263275994196,
+    "validation_nll": 2.4234941005706787
+  },
+  {
+    "epoch": 27,
+    "training_nll": 2.448912979337904,
+    "validation_nll": 2.398805618286133
+  },
+  {
+    "epoch": 28,
+    "training_nll": 2.4567691911061607,
+    "validation_nll": 2.413985013961792
+  },
+  {
+    "epoch": 29,
+    "training_nll": 2.450051151063707,
+    "validation_nll": 2.386500835418701
+  },
+  {
+    "epoch": 30,
+    "training_nll": 2.4660434633890786,
+    "validation_nll": 2.506192445755005
+  },
+  {
+    "epoch": 31,
+    "training_nll": 2.4597536578708223,
+    "validation_nll": 2.3817057609558105
+  },
+  {
+    "epoch": 32,
+    "training_nll": 2.4574536724090574,
+    "validation_nll": 2.438674211502075
+  },
+  {
+    "epoch": 33,
+    "training_nll": 2.4587382147047254,
+    "validation_nll": 2.4166030883789062
+  },
+  {
+    "epoch": 34,
+    "training_nll": 2.449651441362169,
+    "validation_nll": 2.4124951362609863
+  },
+  {
+    "epoch": 35,
+    "training_nll": 2.4408904588487412,
+    "validation_nll": 2.393254280090332
+  },
+  {
+    "epoch": 36,
+    "training_nll": 2.4448958920372856,
+    "validation_nll": 2.4054512977600098
+  },
+  {
+    "epoch": 37,
+    "training_nll": 2.4425260870191785,
+    "validation_nll": 2.448420524597168
+  },
+  {
+    "epoch": 38,
+    "training_nll": 2.443290604273478,
+    "validation_nll": 2.3826723098754883
+  },
+  {
+    "epoch": 39,
+    "training_nll": 2.4468295351664224,
+    "validation_nll": 2.4818081855773926
+  },
+  {
+    "epoch": 40,
+    "training_nll": 2.46984367412991,
+    "validation_nll": 2.395962953567505
+  },
+  {
+    "epoch": 41,
+    "training_nll": 2.4389120864868166,
+    "validation_nll": 2.447756767272949
+  },
+  {
+    "epoch": 42,
+    "training_nll": 2.457928219689263,
+    "validation_nll": 2.4088501930236816
+  },
+  {
+    "epoch": 43,
+    "training_nll": 2.443289914025201,
+    "validation_nll": 2.402348279953003
+  },
+  {
+    "epoch": 44,
+    "training_nll": 2.445261900583903,
+    "validation_nll": 2.389939785003662
+  },
+  {
+    "epoch": 45,
+    "training_nll": 2.448904449886746,
+    "validation_nll": 2.4030725955963135
+  },
+  {
+    "epoch": 46,
+    "training_nll": 2.449866579267714,
+    "validation_nll": 2.421146869659424
+  }
+]

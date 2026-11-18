@@ -1,0 +1,10 @@
+.venv/
+.cache/
+__pycache__/
+.ipynb_checkpoints/
+report.aux
+report.log
+report.out
+report.fdb_latexmk
+report.fls
+report.synctex.gz

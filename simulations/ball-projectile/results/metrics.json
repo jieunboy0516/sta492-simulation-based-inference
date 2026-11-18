@@ -1,0 +1,126 @@
+{
+  "settings": {
+    "num_simulations": 20000,
+    "batch_size": 256,
+    "max_epochs": 100,
+    "patience": 15,
+    "learning_rate": 0.001,
+    "observed_distances_m": [
+      13.0,
+      15.0,
+      16.0
+    ],
+    "num_posterior_samples": 20000,
+    "speed_m_per_s": 13.0,
+    "gravity_m_per_s2": 9.81,
+    "wind_rate": 2.0,
+    "measurement_sd_m": 0.25,
+    "prior_mean_deg": 35.0,
+    "prior_sd_deg": 15.0,
+    "angle_bounds_deg": [
+      0,
+      90
+    ],
+    "num_spline_layers": 3,
+    "bins_per_layer": 16,
+    "hidden_size": 32,
+    "spline_bound": 5,
+    "grid_sizes": [
+      2000,
+      4000
+    ],
+    "simulation_seed": 2026,
+    "training_seed": 42,
+    "posterior_seeds": [
+      100,
+      101,
+      102
+    ],
+    "predictive_seeds": [
+      200,
+      201,
+      202
+    ],
+    "versions": {
+      "torch": "2.7.1",
+      "numpy": "2.1.3",
+      "scipy": "1.15.3",
+      "matplotlib": "3.10.3",
+      "nflows": "0.14"
+    },
+    "torch_threads": 2
+  },
+  "training": {
+    "epochs_run": 46,
+    "best_epoch": 31,
+    "best_validation_nll": 2.3817057609558105,
+    "training_seconds": 39.288000916989404,
+    "training_pairs": 18000,
+    "validation_pairs": 2000
+  },
+  "observations": {
+    "13": {
+      "reference_modes_deg": [
+        24.01875,
+        66.27374999999999
+      ],
+      "flow_modes_deg": [
+        23.88375,
+        66.76875
+      ],
+      "reference_mean_deg": 28.332601940054666,
+      "sample_mean_deg": 27.83037757873535,
+      "reference_low_angle_probability": 0.8989621271240443,
+      "flow_low_angle_probability": 0.910702243167413,
+      "learned_integral": 1.0000058901152922,
+      "total_variation": 0.06862649680364566,
+      "reference_mean_grid_change_deg": 4.730011937681411e-10,
+      "reference_branch_grid_change": 7.090661391373487e-12,
+      "learned_integral_grid_change": 1.1592562539464168e-05,
+      "tv_grid_change": 1.562456983479621e-05,
+      "wind_quadrature_error": 1.095833343047913e-09
+    },
+    "15": {
+      "reference_modes_deg": [
+        29.48625,
+        60.693749999999994
+      ],
+      "flow_modes_deg": [
+        29.05875,
+        61.278749999999995
+      ],
+      "reference_mean_deg": 34.5545292356318,
+      "sample_mean_deg": 33.73731994628906,
+      "reference_low_angle_probability": 0.8384785745867226,
+      "flow_low_angle_probability": 0.8575269085769812,
+      "learned_integral": 0.9999958819351157,
+      "total_variation": 0.09969188520174438,
+      "reference_mean_grid_change_deg": 8.251532790382043e-11,
+      "reference_branch_grid_change": 1.287525641657794e-12,
+      "learned_integral_grid_change": 4.230526645720989e-05,
+      "tv_grid_change": 1.917064057314899e-05,
+      "wind_quadrature_error": 1.3958572966403217e-09
+    },
+    "16": {
+      "reference_modes_deg": [
+        32.973749999999995,
+        57.07125
+      ],
+      "flow_modes_deg": [
+        32.56875,
+        57.49875
+      ],
+      "reference_mean_deg": 38.208339309444305,
+      "sample_mean_deg": 37.9456672668457,
+      "reference_low_angle_probability": 0.7849981114207558,
+      "flow_low_angle_probability": 0.7943673010186866,
+      "learned_integral": 0.9999974156519607,
+      "total_variation": 0.05984621981109344,
+      "reference_mean_grid_change_deg": 3.12070369545836e-11,
+      "reference_branch_grid_change": 6.328271240363392e-14,
+      "learned_integral_grid_change": 3.073953335519519e-05,
+      "tv_grid_change": 7.273529944958057e-06,
+      "wind_quadrature_error": 1.2740963975622897e-09
+    }
+  }
+}
