@@ -1,0 +1,189 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=21mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,graphicx,booktabs,microtype}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\abovedisplayskip}{7pt}
+\setlength{\belowdisplayskip}{7pt}
+\raggedbottom
+\newcommand{\E}{\mathbb E}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\sigmoid}{\operatorname{sigmoid}}
+\newcommand{\figpath}{results/figures/}
+
+\begin{document}
+\begin{center}
+  {\LARGE\bfseries Learning a posterior from simulations}\\[5pt]
+  {\large A small PyTorch NPE project --- STA492}\\[3pt]
+  {\small Two parameters, two simulators, and a conditional normalizing flow}
+\end{center}
+
+\section*{1. What are we trying to infer?}
+We want a distribution over two unknown parameters, $\theta=(a,b)$, given
+20 noisy observations $y=(y_1,\ldots,y_{20})$. The independent priors and
+simulator are
+\[
+ a\sim U[-1,1],\quad b\sim U[-2,2],\qquad
+ y_j=a+bt_j+cb^2+\varepsilon_j,\quad
+ \varepsilon_j\overset{\mathrm{iid}}\sim N(0,0.25^2).
+\]
+The known locations $t_j$ are equally spaced in $[-0.2,0.2]$.
+For $c=0$ this is linear regression. For $c=1$ the observable intercept is
+$a+b^2$: uncertainty in $b$ can be offset by changing $a$, creating a curved
+posterior. The second model is nonlinear in the parameters; its mean curve
+is still linear in $t$. The narrow location range keeps slope uncertainty
+visible. Both observed datasets use $(a,b)=(0.2,0.8)$ and the same seeded
+noise realization (seed 42).
+
+\section*{2. Learn the reverse direction from simulated pairs}
+Simulation-based inference (SBI) uses a simulator to learn about unknown
+parameters. Neural posterior estimation (NPE) learns a conditional density
+$q_\phi(\theta\mid y)$ \cite{npe}. We draw $\theta_i$ from the prior, simulate
+$y_i$, and minimize
+\[
+ \widehat{\mathcal L}(\phi)
+ =-\frac1N\sum_{i=1}^N\log q_\phi(\theta_i\mid y_i).
+\]
+Here $\phi$ denotes the network weights. The population identity
+\[
+ \mathcal L(\phi)=H(\Theta\mid Y)
+ +\E_{p(y)}\!\left[\KL\{p(\theta\mid y)\Vert q_\phi(\theta\mid y)\}\right]
+\]
+follows by adding and subtracting $\log p(\theta\mid y)$ inside the loss.
+The entropy term does not depend on $\phi$, so training targets the posterior
+on average over simulated datasets. Finite simulations and optimization
+still leave approximation error. Training uses no likelihood evaluations.
+
+\section*{3. Represent the density with an invertible flow}
+Starting from $z\sim N(0,I_2)$, six conditional affine coupling layers
+transform the sample \cite{realnvp}. One layer is
+\[
+ v_1=u_1,\quad v_2=u_2e^{s(u_1,y)}+h(u_1,y),\qquad
+ u_2=(v_2-h(v_1,y))e^{-s(v_1,y)}.
+\]
+Its triangular Jacobian has forward log absolute determinant $s$.
+We alternate the unchanged coordinate. Each layer uses two hidden layers
+of 64 tanh units; $s=1.5\tanh(s_{\rm raw})$ limits extreme scaling.
+
+The last step enforces the prior bounds: $\theta_j=\ell_j+w_j\sigmoid(u_j)$,
+where $\ell=(-1,-2)$ and $w=(2,4)$. Its forward log determinant is
+\[
+ \sum_{j=1}^2\bigl[\log w_j+\log\sigmoid(u_j)+\log\sigmoid(-u_j)\bigr].
+\]
+For density evaluation we invert all steps and use
+$\log q_\phi(\theta\mid y)=\log p_Z(z)+\log|\det(\partial z/\partial\theta)|$.
+For sampling we run forward. Samples are not clipped, and density is zero
+outside the prior box; assigning zero at its endpoints changes no probabilities.
+
+\newpage
+\section*{4. Training and measured posterior accuracy}
+Each example uses one separate training run with 20,000 simulated pairs:
+18,000 for training and 2,000 for validation. We standardize observations
+using training statistics only. Adam uses learning rate $10^{-3}$, batches
+of 256, and gradient norm clipping at 5. Training stops after 15 epochs
+without a validation improvement of $10^{-4}$, with a 100-epoch limit.
+We restore the best weights. The linear run stopped at epoch 75 (best: 60);
+the curved run at epoch 83 (best: 68). CPU training took 19.4 and 20.6 seconds,
+respectively, using two PyTorch threads.
+
+\begin{center}
+\includegraphics[width=0.94\linewidth]{\figpath training.pdf}\\[-2pt]
+{\small Training and validation negative log densities; dotted lines mark restored epochs.}
+\end{center}
+
+For these tractable toy models, we calculate a reference posterior from
+the Gaussian likelihood and uniform prior over the entire prior rectangle.
+The linear reference is a \emph{truncated Gaussian}, not an unrestricted one.
+This reference is used only after training.
+
+\begin{center}
+\includegraphics[width=\linewidth]{\figpath posterior_comparison.pdf}\\[-2pt]
+{\small Joint posterior contours, learned samples (gray), and generating parameters (cross).}
+\end{center}
+
+\begin{center}
+\small
+\begin{tabular}{@{}llrrll@{}}
+\toprule
+Example & Parameter & Ref.\ mean & Flow mean & Ref.\ 90\% interval & Flow 90\% interval\\
+\midrule
+Linear & $a$ & $0.192$ & $0.204$ & $[0.100,\,0.284]$ & $[0.115,\,0.294]$\\
+       & $b$ & $1.073$ & $1.102$ & $[0.338,\,1.767]$ & $[0.363,\,1.805]$\\
+Curved & $a$ & $-0.044$ & $0.079$ & $[-0.877,\,0.754]$ & $[-0.814,\,0.782]$\\
+       & $b$ & $0.878$ & $0.799$ & $[0.269,\,1.307]$ & $[0.270,\,1.264]$\\
+\bottomrule
+\end{tabular}\\[3pt]
+{\small Reference summaries use the refined grid; flow summaries use 20,000 posterior draws.}
+\end{center}
+
+The flow captures the curved relationship, but the learned curved posterior
+shifts mass toward larger $a$ and smaller $b$. Similar-looking contours are
+therefore insufficient evidence of accurate inference. The intervals above
+are marginal central 90\% intervals, not a joint credible region.
+
+\newpage
+\section*{5. Numerical checks and what the results mean}
+We evaluate both densities on midpoint grids covering $[-1,1]\times[-2,2]$.
+The reference is normalized by numerical integration. The learned density
+keeps its original normalization. Total variation is approximated by
+\[
+ \operatorname{TV}(p,q)=\frac12\int|p(\theta\mid y)-q(\theta\mid y)|\,d\theta
+ \ \approx\ \frac12\sum_{k,l}|p_{kl}-q_{kl}|\,\Delta a\,\Delta b.
+\]
+TV is zero for identical densities and at most one. The learned grid integral
+checks quadrature separately; an integral near one does not establish accuracy.
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Example & Learned integral & TV distance & TV change on refinement\\
+\midrule
+Linear & $1.000002$ & $0.12196$ & $0.000003$\\
+Curved & $0.999975$ & $0.22066$ & $0.000048$\\
+\bottomrule
+\end{tabular}\\[3pt]
+{\small Integral and TV use an $800\times800$ grid; refinement starts at $400\times400$.}
+\end{center}
+
+On refinement, reference means change by less than $1.3\times10^{-6}$ and
+90\% interval endpoints by less than $1.2\times10^{-4}$. These changes are
+much smaller than the observed neural approximation errors. Thus grid
+resolution does not explain the discrepancy between the flow and reference.
+
+\begin{center}
+\includegraphics[width=0.90\linewidth]{\figpath posterior_predictive.pdf}\\[-2pt]
+{\small Future-data intervals include new measurement noise; dashed curves omit it.}
+\end{center}
+
+For the predictive check, posterior draws generate new noisy measurements.
+The blue band is a pointwise central 90\% predictive interval, not a
+simultaneous band. The plotted observations are the inference data, not an
+independent test. Different parameter pairs predict similar measurements,
+so plausible predictions can coexist with posterior error.
+
+\textbf{Verification and limits.}
+Seven numerical tests check inverses, automatic-differentiation Jacobians,
+density integration, finite gradients, bounds, and saved standardization.
+The notebook runs from a fresh kernel and verifies grid refinement and
+reloaded densities. One seed and one dataset per example do not establish
+calibration. Further tuning and sequential proposals are outside this project.
+
+\textbf{Reproduce and read.}
+Start with \texttt{npe\_demo.ipynb} and \texttt{flow.py}; the README gives run
+and test commands. Settings, seeds, versions, weights, figures, and raw
+summaries are in \texttt{results/}. New data under the same simulator and
+prior can use the saved network without retraining.
+
+\begin{thebibliography}{9}
+\small
+\bibitem{realnvp} L. Dinh, J. Sohl-Dickstein, and S. Bengio (2017).
+\emph{Density estimation using Real NVP}. ICLR.
+\href{https://arxiv.org/abs/1605.08803}{arXiv:1605.08803}.
+\bibitem{npe} G. Papamakarios and I. Murray (2016).
+\emph{Fast $\varepsilon$-free inference of simulation models with Bayesian
+conditional density estimation}. NeurIPS 29.
+\href{https://proceedings.neurips.cc/paper/2016/hash/6aca97005c68f1206823815f66102863-Abstract.html}{Original paper}.
+\end{thebibliography}
+\end{document}
