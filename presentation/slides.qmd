@@ -1,0 +1,242 @@
+---
+title: "Simulation-based Inference"
+format:
+  revealjs:
+    embed-resources: true
+    html-math-method: katex
+    transition: none
+    background-transition: none
+    slide-number: true
+    slide-level: 2
+    theme: [default, slides.scss]
+    width: 1280
+    height: 800
+---
+
+# Bayesian Recap
+
+## Data Generating Process {.center .recap-slide}
+
+Suppose we have some data $X$ that is generated from a distribution $p_0$.
+
+::: {.fragment}
+$p_0$ is called the *data generating process*.
+:::
+
+::: {.fragment}
+How can we use $X$ to make inferences about $p_0$?
+:::
+
+## Bayesian Approach {.center .recap-slide}
+
+Let $\mathcal{P} = \{p(x \mid \theta) : \theta \in \Theta\}$ be a family of distributions that contains $p_0$.
+
+::: {.fragment}
+Let $p(\theta)$ describe prior knowledge about the data generating process.
+:::
+
+::: {.fragment}
+Our beliefs about the data generating process after having observed $X=x$ are described by
+
+$$
+p(\theta \mid x)
+= \frac{p(x \mid \theta)\,p(\theta)}{p(x)}
+\propto p(x \mid \theta)\,p(\theta).
+$$
+:::
+
+## {#from-bayes-to-sbi .inference-slide}
+
+::: {.bayes-line}
+[$p(\theta\mid x)$]{#bayes-post} $\propto$ [$p(x\mid\theta)$]{#bayes-like} [$p(\theta)$]{#bayes-prior}
+:::
+
+:::::: {.conjugacy .fragment .fade-out fragment-index="2"}
+::::: {.fragment fragment-index="0"}
+### Conjugacy
+
+::: {.case-intro}
+Let $x$ count successes in $n$ independent trials with success probability $\theta$ and a $\operatorname{Beta}(a,b)$ prior.
+:::
+
+::: {.example-prior}
+[$\displaystyle p(\theta)=\frac{\theta^{a-1}(1-\theta)^{b-1}}{\mathrm{B}(a,b)}$]{#conj-prior}
+:::
+
+::: {.example-likelihood}
+[$\displaystyle p(x\mid\theta)=\binom{n}{x}\theta^x(1-\theta)^{n-x}$]{#conj-like}
+:::
+
+:::::
+::::: {.fragment fragment-index="1"}
+::: {.example-posterior}
+[$\displaystyle p(\theta\mid x)=\frac{\theta^{a+x-1}(1-\theta)^{b+n-x-1}}{\mathrm{B}(a+x,b+n-x)}$]{#conj-post}
+:::
+:::::
+::::::
+
+::::: {.mh .fragment .fade-in-then-out fragment-index="2"}
+### Markov-Chain Monte Carlo
+
+::: {.mh-proposal}
+Draw $\theta' \sim q(\cdot\mid\theta)$.
+:::
+
+::: {.mh-update}
+Set $r=$ [[[$p(x\mid\theta')$]{#mh-like} [$p(\theta')$]{#mh-prior} $q(\theta\mid\theta')$]{.numerator} [$p(x\mid\theta)\,p(\theta)\,q(\theta'\mid\theta)$]{.denominator}]{.fraction}.
+:::
+
+::: {.mh-decision}
+Draw $u\sim\operatorname{Uniform}(0,1)$.
+
+If $u < \min(1,r)$, set $\theta \leftarrow \theta'$.
+:::
+:::::
+
+::::: {.sbi .fragment fragment-index="3"}
+### Simulation-based inference
+
+::: {.case-intro}
+Assume we can sample from the prior and the simulator, even when the likelihood is intractable.
+:::
+
+::: {.example-prior}
+[$\theta \sim p(\theta)$]{#sbi-prior}
+:::
+
+::: {.example-likelihood}
+[$X \sim p(\cdot\mid\theta)$]{#sbi-like}
+:::
+
+::: {.simulator-callout}
+[we call this the simulator]{#simulator-name}
+:::
+
+:::::
+
+{{< include bayes-arrows.html >}}
+
+# Introduction to Simulation-based Inference
+
+## Epidemiology {#epidemiology .epi-slide}
+
+::: {.epi-questions}
+What is the probability of infection after contact with an infectious person?
+
+What is the probability of recovery in one time step?
+:::
+
+{{< include sir-people.html >}}
+
+## Let’s make a simulator {#sir-simulator .epi-slide}
+
+::: {.sir-parameters}
+$\theta = (\theta_1, \theta_2)$  
+Per time step
+
+~~~{=html}
+<div class="sir-parameter">
+  <label for="sir-p">Transmission per infectious neighbor</label>
+  <div class="sir-adjust"><span><i>θ</i><sub>1</sub> = <output id="sir-p-value" for="sir-p">0.41</output></span><input id="sir-p" type="range" aria-label="Theta 1, transmission per infectious neighbor" min="0" max="1" step="0.01" value="0.41"></div>
+</div>
+<div class="sir-parameter">
+  <label for="sir-q">Recovery per infectious person</label>
+  <div class="sir-adjust"><span><i>θ</i><sub>2</sub> = <output id="sir-q-value" for="sir-q">0.18</output></span><input id="sir-q" type="range" aria-label="Theta 2, recovery per infectious person" min="0" max="1" step="0.01" value="0.18"></div>
+</div>
+~~~
+:::
+
+~~~{=html}
+<div class="sir-maps" role="group" aria-label="Spatial SIR simulator">
+  <div class="sir-map-pair">
+    <figure><figcaption>Simulated states</figcaption><canvas id="sir-states" role="img"></canvas></figure>
+    <figure><figcaption id="sir-visit-caption">Last observation</figcaption><canvas id="sir-visit" role="img"></canvas></figure>
+  </div>
+  <div class="sir-playback">
+    <button type="button" id="sir-play">Play</button>
+    <label for="sir-time">Step <output id="sir-clock" for="sir-time">8</output></label>
+    <input id="sir-time" type="range" min="0" max="32" step="1" value="8">
+  </div>
+  <div class="sir-legend"><span>One person per cell</span><span class="sir-key susceptible">Susceptible</span><span class="sir-key infectious">Infectious</span><span class="sir-key recovered">Recovered</span></div>
+</div>
+~~~
+
+## Real-world observations {#sir-observations .epi-slide}
+
+These three simulated maps form our “real-world” observation $x^*$.
+
+~~~{=html}
+<div class="sir-snapshots">
+  <figure><canvas data-sir-visit="4" role="img"></canvas><figcaption><i>t</i> = 4</figcaption></figure>
+  <figure><canvas data-sir-visit="8" role="img"></canvas><figcaption><i>t</i> = 8</figcaption></figure>
+  <figure><canvas data-sir-visit="12" role="img"></canvas><figcaption><i>t</i> = 12</figcaption></figure>
+</div>
+~~~
+
+::: {.sir-note}
+Red marks people recorded as infectious at each visit.
+:::
+
+We want to find the posterior $p(\theta \mid x^*)$.
+
+{{< include sir-replay.html >}}
+
+# Neural Methods for SBI
+
+## Conditional density estimation {#conditional-density-estimation .neural-slide data-menu-title="Neural likelihood estimation"}
+
+Generate $\theta \sim p(\theta)$, then $x \sim p(x \mid \theta)$.
+
+:::: {.cde-flow role="group" aria-label="Simulated data and parameter pairs train a neural conditional density estimator to approximate the likelihood."}
+
+{{< include _cde-training.qmd >}}
+
+::: {.cde-output}
+$q(x\mid\theta)$
+:::
+::::
+
+::: {.fragment .cde-approximation}
+[$q(x\mid\theta) \approx p(x\mid\theta)$]{.cde-equation} [[$\leftarrow$]{.cde-pointer aria-hidden="true"} [call this **Neural Likelihood Estimation (NLE)**]{.cde-name}]{.cde-annotation}
+:::
+
+::: {.fragment}
+Run MCMC with target proportional to $q(x^*\mid\theta)\,p(\theta)$.
+:::
+
+## Conditional density estimation {#neural-posterior-estimation .neural-slide data-menu-title="Neural posterior estimation"}
+
+Generate $\theta \sim p(\theta)$, then $x \sim p(x \mid \theta)$.
+
+:::: {.cde-flow role="group" aria-label="Simulated data and parameter pairs train a neural conditional density estimator."}
+
+{{< include _cde-training.qmd >}}
+
+::: {.cde-output}
+[[$q(x\mid\theta)$]{.fragment .fade-out fragment-index="0"} [$q(\theta\mid x)$]{.fragment fragment-index="0"}]{.r-stack}
+:::
+::::
+
+::: {.cde-approximation}
+[[$q(x\mid\theta) \approx p(x\mid\theta)$]{.fragment .fade-out fragment-index="0"} [$q(\theta\mid x) \approx p(\theta\mid x)$]{.fragment fragment-index="0"}]{.cde-equation .r-stack} [[$\leftarrow$]{.cde-pointer aria-hidden="true"} [call this [[**~~Neural Likelihood Estimation (NLE)~~**]{.fragment .fade-out fragment-index="0"} [**Neural Posterior Estimation (NPE)**]{.fragment fragment-index="0"}]{.r-stack}]{.cde-name}]{.cde-annotation}
+:::
+
+::: {.fragment fragment-index="1"}
+For the observation $x^*$, draw $\theta\sim q(\cdot\mid x^*)$.
+:::
+
+# Summary Statistics
+
+<!-- Explain what summaries retain and what information they can discard. -->
+
+# Misspecification
+
+<!-- Discuss how simulator mismatch affects inference and how to diagnose it. -->
+
+# New advances
+
+<!-- Add selected recent developments. -->
+
+# Conclusion
+
+<!-- Add the main takeaways. -->
