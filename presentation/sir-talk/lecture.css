@@ -1,0 +1,113 @@
+@font-face { font-family:"EB Garamond"; src:url("fonts/EBGaramond-Regular.otf") format("opentype"); font-style:normal; font-weight:400; font-display:swap; }
+@font-face { font-family:"EB Garamond"; src:url("fonts/EBGaramond-Italic.otf") format("opentype"); font-style:italic; font-weight:400; font-display:swap; }
+@font-face { font-family:"EB Garamond"; src:url("fonts/EBGaramond-Bold.otf") format("opentype"); font-style:normal; font-weight:700; font-display:swap; }
+
+.reveal .katex { font-size:1em; }
+
+.reveal .figure-slide { box-sizing:border-box; padding-inline:7%; text-align:left; }
+.reveal .figure-slide h2 { font-size:1.55em; margin-bottom:.58em; }
+.reveal .figure-slide p { margin:.55em 0; line-height:1.24; }
+.reveal .figure-slide img.talk-figure { display:block; width:100%; height:370px; object-fit:contain; margin:.2em auto; }
+.reveal .figure-slide figure { margin:0; }
+.reveal .figure-slide figure figcaption { display:none; }
+.reveal .figure-slide .katex-display { margin:.65em 0 0; font-size:.93em; }
+.flow-controls { display:flex; gap:.6em; align-items:center; max-width:600px; margin:auto; }
+.flow-controls button { background:#202020; color:white; font:inherit; border:0; border-radius:5px; padding:.07em .65em; cursor:pointer; }
+.flow-controls input { flex:1; accent-color:#202020; }
+.reveal .mechanisms { display:grid; grid-template-columns: .85fr 1.6fr; align-items:center; gap:.9em; margin:1.3em 0; }
+.reveal .mechanisms p:nth-child(odd) { color:#222; font-weight:600; }
+.reveal .talk-chain { text-align:center; margin:1em auto .6em; }
+.reveal .talk-chain p { margin:.16em; }
+.reveal #npe-pfn > p:last-child { font-size:.75em; margin-top:1.35em; }
+.reveal #takeaways p { margin:1em 0; }
+
+/* Center the composition; keep multi-line explanations on a shared left edge. */
+.reveal h1, .reveal h2, .reveal h3 { font-weight:400; letter-spacing:normal; }
+.reveal .slides section.title-slide h1,
+.reveal #title-slide h1 { text-align:center; margin-inline:auto; max-width:96%; }
+.reveal .slides section.title-slide h1 { font-size:1.95em; }
+.reveal #title-slide h1 { font-size:2.55em; }
+.reveal .recap-slide p { max-width:23em; margin-inline:auto; }
+.reveal .figure-slide { text-align:center; }
+.reveal .figure-slide > p { margin-inline:auto; max-width:26em; }
+.reveal .figure-slide img.talk-figure { height:410px; }
+.reveal .figure-slide > p:has(> img.talk-figure) { max-width:none; }
+.reveal #counts img.talk-figure { height:auto; margin:1.2em auto; }
+.reveal #coverage img.talk-figure { height:525px; }
+.reveal #dealing-with-misspecification ol { text-align:left; }
+.reveal #dealing-with-misspecification li + li { margin-top:.6em; }
+.reveal #dealing-with-misspecification li a { font-size:.75em; color:#505050; text-decoration:underline; text-underline-offset:.12em; }
+.reveal #biased-posterior { padding-inline:2.5%; }
+.reveal #biased-posterior h2 { margin-bottom:.25em; }
+.reveal #biased-posterior img.talk-figure { display:block; width:100%; height:auto; max-height:705px; margin:0 auto; }
+.reveal #biased-posterior > p { margin:0; }
+.reveal .figure-slide .mechanisms, .reveal #takeaways > p { text-align:left; }
+.reveal .neural-slide h2, .reveal .epi-slide h2 { text-align:center; }
+.reveal #delayed-simulator { padding-inline:3%; }
+.reveal #delayed-simulator h2 { margin-bottom:.22em; }
+.onset-control { display:flex; align-items:center; gap:.6em; padding:0 3%; margin:.55em 0; font-size:.85em; }
+.onset-control select { font:inherit; color:inherit; background:white; border:1px solid #555; border-radius:2px; }
+.reveal .sir-playback button, .reveal .flow-controls button {
+  background:white; color:#202020; border:1.5px solid #555; border-radius:2px;
+}
+.reveal input[type=range] { accent-color:#4d4d4d; }
+.reveal #npe-pfn a { color:#444; text-decoration:underline; text-underline-offset:.15em; }
+
+.reveal .neural-slide .training-loss { text-align:left; }
+.training-loss .r-stack { display:inline-grid; vertical-align:baseline; }
+.reveal .neural-slide .cde-flow { margin-bottom:.85em; }
+
+.reveal .transport-slide,
+.reveal .transport-slide h2,
+.reveal .transport-slide .katex-display > .katex { text-align:left; }
+.reveal :is(#flow-matching, #score-matching) .katex-display > .katex { text-align:center; }
+.reveal .transport-slide > p { max-width:none; margin-inline:0; }
+.reveal .transport-slide img.talk-figure { height:auto; margin-block:.8em; }
+
+.reveal .flow-paper-panel { margin:.75em 0; }
+.reveal .flow-paper-panel img { display:block; width:86%; height:auto; margin:0; }
+.reveal .flow-paper-panel p { margin:0; }
+.reveal .flow-paper-panel a { font-size:.58em; color:#505050; }
+.reveal .flow-takeaway {
+  width:fit-content;
+  margin-inline:auto;
+  padding:.04em .16em;
+  border:2px solid #33658A;
+  border-radius:5px;
+  background:#e8f0f3;
+  text-align:center;
+}
+.reveal .flow-takeaway p { margin:0; }
+
+.nf-derivation { position:relative; }
+.nf-equation { padding-top:.46em; white-space:nowrap; }
+.nf-derivation :is([data-word],[data-term]) {
+  display:inline-block; border:2px solid transparent; border-radius:5px; padding:0 .08em;
+}
+.nf-derivation:has(.nf-equation.visible) .nf-inverse { border-color:#33658A; background:#e8f0f3; }
+.nf-derivation:has(.nf-equation.visible) .nf-jacobian { border-color:#C44E28; background:#fcf0eb; }
+.nf-links { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; visibility:hidden; }
+.nf-links > path { fill:none; stroke-width:1.8; }
+.nf-derivation:has(.nf-equation.visible) .nf-links { visibility:visible; }
+#sir-flow-canvas { display:block; width:100%; height:auto; margin:0 auto; }
+#sir-flow-matching .flow-controls { max-width:88%; }
+.flow-controls output { min-width:2.2em; font-variant-numeric:tabular-nums; }
+
+.flow-controls label { white-space:nowrap; font-size:.78em; }
+.flow-controls input[type=checkbox] { width:.9em; height:.9em; }
+
+.reveal #sir-estimator-comparison { text-align:left; }
+.reveal #sir-estimator-comparison > p { max-width:none; }
+.reveal #sir-estimator-comparison img.talk-figure { height:auto; }
+
+.reveal #flow-sampling-density { padding-inline:4%; }
+.reveal .flow-operations {
+  display:grid;
+  grid-template-columns:minmax(0, .95fr) minmax(0, 1.05fr);
+  gap:1.3em;
+  margin:1.1em 0 .85em;
+}
+.reveal .flow-operation { border-top:1px solid #aab6bf; padding-top:.4em; }
+.reveal .flow-operation > p:first-child { margin-top:0; }
+.reveal .flow-operation .katex-display { font-size:.85em; }
+.reveal .flow-source { font-size:.58em; color:#505050; }

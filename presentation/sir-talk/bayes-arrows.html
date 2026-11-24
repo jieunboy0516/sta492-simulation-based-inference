@@ -1,0 +1,103 @@
+<svg class="bayes-arrows" aria-hidden="true"></svg>
+<script>
+(() => {
+  const slide = document.getElementById('from-bayes-to-sbi');
+  const svg = slide.querySelector('.bayes-arrows');
+  const ns = 'http://www.w3.org/2000/svg';
+  const colors = { like: '#202020', prior: '#202020', post: '#202020' };
+
+  function draw() {
+    const box = svg.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const width = slide.clientWidth, height = slide.clientHeight;
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    svg.replaceChildren();
+    function element(tag, attrs) {
+      const node = document.createElementNS(ns, tag);
+      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+      svg.append(node);
+      return node;
+    }
+    function anchor(id, edge) {
+      const r = document.getElementById(id).getBoundingClientRect();
+      const middleX = (r.left + r.right) / 2;
+      const middleY = (r.top + r.bottom) / 2;
+      const x = edge === 'left' ? r.left : edge === 'right' ? r.right : middleX;
+      const y = edge === 'top' ? r.top : edge === 'bottom' ? r.bottom : middleY;
+      return [(x - box.left) * width / box.width, (y - box.top) * height / box.height];
+    }
+    function connect(term, destination, lines, {ratio = false, outer = false, boldLines = 0} = {}) {
+      const side = term === 'prior' ? 1 : -1;
+      const edge = side === 1 ? 'right' : 'left';
+      const [sx, sy] = anchor('bayes-' + term, term === 'like' ? 'bottom' : edge);
+      const [dx, dy] = anchor(destination, ratio ? 'top' : edge);
+      const gutter = term === 'post' ? 0.06 : term === 'like' ? 0.13 : 0.89;
+      const rail = width * gutter;
+      const ex = ratio ? dx : dx + 8 * side;
+      const ey = ratio ? dy - 5 : dy;
+      // Leave the inner likelihood box below its neighbours. Approach the
+      // ratio from above so even the middle factor has a clear arrow tip.
+      const rise = term === 'like' ? 47 : 10;
+      const shoulder = sy + rise;
+      const enter = ratio ? ey - 60 : ey - 52;
+      const lead = term === 'like' ? sx : sx + 48 * side;
+      const stem = 'M '+sx+' '+sy+
+        ' C '+lead+' '+shoulder+' '+rail+' '+(shoulder-7)+' '+rail+' '+(shoulder+55)+
+        ' V '+enter;
+      const tail = ratio
+        ? ' C '+rail+' '+(ey-15)+' '+ex+' '+(ey-56)+' '+ex+' '+ey
+        : ' C '+rail+' '+ey+' '+(ex+72*side)+' '+ey+' '+ex+' '+ey;
+      const color = colors[term];
+      element('path', {d:stem+tail, fill:'none', stroke:color, 'stroke-width':1.9, opacity:0.5});
+      const arrow = ratio ? 'm -5 -8 l 5 8 5 -8' :
+        (side === 1 ? 'm 8 -5 l -8 5 8 5' : 'm -8 -5 l 8 5 -8 5');
+      element('path', {d:'M '+ex+' '+ey+' '+arrow, fill:'none', stroke:color,
+        'stroke-width':2, 'stroke-linecap':'round','stroke-linejoin':'round',opacity:0.82});
+      const labelY = ratio ? ey - 93 : outer ? ey - 75 : (shoulder + enter) / 2 + 18;
+      element('rect', {x:rail-3, y:labelY-lines.length*15-4,
+        width:6, height:lines.length*30+8, fill:'#ffffff'});
+      for (const [i,line] of lines.entries()) {
+        const label = element('text', {x:rail, y:labelY+(i-(lines.length-1)/2)*30,
+          'text-anchor':'middle','dominant-baseline':'central',class:i < boldLines ? 'arrow-caption emphasis' : 'arrow-caption',fill:color});
+        label.textContent = line;
+      }
+    }
+    const shown = selector => slide.querySelector(selector).classList.contains('visible');
+    if (shown('.sbi')) {
+      connect('prior','sbi-prior',['Sample a','parameter']);
+      connect('like','sbi-like',['Simulate data','at that parameter'],{boldLines:1});
+      const [sx, sy] = anchor('sbi-like','bottom');
+      const [dx, dy] = anchor('simulator-name','left');
+      const end = dx - 10;
+      element('path', {d:'M '+sx+' '+(sy+5)+' Q '+sx+' '+dy+' '+end+' '+dy,
+        fill:'none', stroke:colors.like, 'stroke-width':2, opacity:0.65});
+      element('path', {d:'M '+end+' '+dy+' m -8 -5 l 8 5 -8 5',
+        fill:'none', stroke:colors.like, 'stroke-width':2});
+    } else if (slide.querySelector('.mh').classList.contains('current-fragment')) {
+      const evaluation = ['Evaluate numerically,','up to scale'];
+      connect('like','mh-like',evaluation,{ratio:true,boldLines:1});
+      connect('prior','mh-prior',evaluation,{ratio:true,boldLines:1});
+    } else if (shown('.conjugacy > .fragment')) {
+      connect('prior','conj-prior',['Prior family']);
+      connect('like','conj-like',['Closed-form','likelihood'],{boldLines:2});
+      if (shown('.conjugacy > .fragment:nth-child(2)'))
+        connect('post','conj-post',['Same family','after the update'],{outer:true});
+    }
+  }
+  let scheduled = false;
+  function redraw() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => { scheduled = false; draw(); });
+  }
+  const size = new ResizeObserver(redraw);
+  size.observe(slide);
+  for (const node of slide.querySelectorAll('.bayes-line, span[id]')) size.observe(node);
+  new MutationObserver(redraw).observe(slide, {subtree:true, attributes:true, attributeFilter:['class']});
+  window.addEventListener('load', redraw);
+  window.addEventListener('resize', redraw);
+  slide.addEventListener('transitionend', redraw);
+  document.fonts.addEventListener('loadingdone', redraw);
+  document.fonts.ready.then(redraw);
+})();
+</script>

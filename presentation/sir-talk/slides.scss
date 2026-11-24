@@ -1,0 +1,264 @@
+/*-- scss:defaults --*/
+$backgroundColor: #ffffff;
+$mainColor: #202020;
+$headingColor: #202020;
+$linkColor: #303030;
+$font-family-sans-serif: "EB Garamond", Georgia, serif;
+$presentation-heading-font: "EB Garamond", Georgia, serif;
+$presentation-heading-font-weight: 400;
+$presentation-font-size-root: 37px;
+$presentation-h2-font-size: 1.55em;
+
+/*-- scss:rules --*/
+.reveal .slides .fragment,
+.reveal .progress span {
+  transition: none !important;
+  animation: none !important;
+}
+
+.reveal h2 {
+  letter-spacing: normal;
+  font-weight: 400;
+  text-align: center;
+}
+
+.reveal .recap-slide {
+  box-sizing: border-box;
+  padding-inline: 8% 6%;
+  text-align: left;
+}
+
+.reveal .recap-slide p {
+  margin: 0.65em 0;
+  font-size: 1.14em;
+}
+
+.reveal .recap-slide .katex-display {
+  margin: 0.65em 0;
+}
+
+.reveal .recap-slide .katex-display > .katex {
+  text-align: left;
+}
+
+/* Keep the math in reading order. The SVG follows its rendered endpoints. */
+.reveal section.inference-slide {
+  height: 740px;
+  font-size: 1em;
+  --content-inset: 25%;
+  text-align: left;
+  --ink: #202020;
+  --blue: #33658A;
+}
+.inference-slide > h2 { display: none; }
+.reveal .inference-slide .bayes-line {
+  position: absolute;
+  top: 36px;
+  inset-inline: var(--content-inset) 5%;
+  white-space: nowrap;
+  font-size: 1.38em;
+}
+.reveal .inference-slide p { margin: 0; }
+.reveal .inference-slide .bayes-line span[id] {
+  display: inline-block;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  padding: 0.04em 0.16em;
+}
+.inference-slide:has(.conjugacy .visible) #bayes-like {
+  background: #e8f0f3;
+  border-color: #33658A !important;
+}
+.inference-slide:has(.conjugacy .visible) #bayes-prior {
+  background: #f5f5f5;
+  border-color: #777777 !important;
+}
+.inference-slide:has(#conj-post):has(.conjugacy > .fragment:nth-child(2).visible) #bayes-post {
+  background: #fcf0eb;
+  border-color: #C44E28 !important;
+}
+.reveal .inference-slide :is(.conjugacy,.mh,.sbi) h3,
+.reveal .inference-slide :is(.case-intro,.example-prior,.example-likelihood,.example-posterior,.mh-proposal,.mh-update,.mh-decision) {
+  position: absolute;
+  inset-inline: var(--content-inset);
+  margin: 0;
+}
+.reveal .inference-slide :is(.conjugacy,.mh,.sbi) h3 { top: 175px; inset-inline-end: 12%; font-size: 1.5em; }
+.inference-slide .case-intro { top: 254px; }
+.inference-slide .example-prior { top: 395px; }
+.inference-slide .example-likelihood { top: 510px; }
+.inference-slide .conjugacy .example-prior { top: 440px; }
+.inference-slide .conjugacy .example-likelihood { top: 560px; }
+.inference-slide .example-posterior { top: 680px; }
+.inference-slide .mh-proposal { top: 276px; }
+.inference-slide .mh-update { top: 384px; }
+.inference-slide .mh-decision { top: 520px; }
+.reveal .inference-slide .mh-decision p + p { margin-top: .5em; }
+.inference-slide .fraction {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  align-items: center;
+  font-size: .97em;
+  line-height: 1.45;
+}
+.inference-slide .numerator { padding: 0 .12em .07em; border-bottom: 1.6px solid; }
+.inference-slide .denominator { padding-top: .07em; }
+.inference-slide .bayes-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.inference-slide .arrow-caption {
+  font: 27px/1.2 "EB Garamond", Georgia, serif;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 10px;
+  stroke-linejoin: round;
+}
+
+.inference-slide .fraction span[id] { display: inline-block; }
+
+
+.reveal .inference-slide .sbi .case-intro {
+  top: 248px;
+}
+
+.reveal .inference-slide .simulator-callout {
+  position: absolute;
+  left: 40%;
+  top: 625px;
+  color: var(--blue);
+  font: 600 1.3em/1.2 "EB Garamond", Georgia, serif;
+}
+.inference-slide .arrow-caption.emphasis { font-weight: 700; }
+
+.reveal .epi-slide, .reveal .neural-slide {
+  padding-inline: 8%;
+  box-sizing: border-box;
+  text-align: left;
+}
+.reveal .epi-slide h2 { margin-bottom: 1em; }
+.epi-slide .susceptible { color: #666666; }
+.epi-slide .infectious { color: #C44E28; }
+.sir-people .exposed { color: #936a19; }
+.epi-slide .sir-key.exposed::before { background: #DCAA40; }
+.epi-slide .recovered { color: #33658A; }
+.epi-questions {
+  width: 52%;
+  display: grid;
+  grid-template-rows: repeat(2, 185px);
+  align-items: center;
+  font-size: 1.16em;
+}
+.sir-people { position: absolute; top: 135px; right: 8%; width: 35%; }
+.sir-people svg { display: block; width: 380px; max-width: 100%; }
+.sir-people text { fill: currentColor; text-anchor: middle; font: 26px "EB Garamond", Georgia, serif; }
+.sir-people .change { fill: none; stroke: #202020; stroke-width: 2.5; }
+/* The two maps share the full-width simulator and one time control. */
+.reveal #sir-simulator { padding-inline: 3%; }
+.reveal #sir-simulator h2 { margin-bottom: .22em; }
+.sir-parameters {
+  display: grid;
+  grid-template-columns: auto 1.12fr 1fr;
+  align-items: center;
+  gap: 4%;
+  margin: 0 1% .4em;
+  font-size: .79em;
+  line-height: 1.2;
+}
+.reveal .sir-parameters p { margin: 0; }
+.sir-parameter label { display: block; }
+.sir-adjust {
+  display: flex;
+  align-items: center;
+  gap: .65em;
+  margin-top: .1em;
+  font-variant-numeric: tabular-nums;
+}
+.sir-adjust span { white-space: nowrap; }
+.sir-adjust i { font-family: inherit; }
+.sir-adjust input { flex: 1; min-width: 0; accent-color: #222; }
+.sir-maps {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 4px 20px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+.sir-map-pair, .sir-legend { display: flex; justify-content: space-around; }
+.reveal .sir-maps figure, .reveal .sir-snapshots figure { margin: 0; }
+.sir-map-pair figure { flex: 1; text-align: center; }
+.sir-maps canvas, .sir-snapshots canvas {
+  display: block; border: 1px solid #aaa; margin: 0 auto;
+  image-rendering: pixelated;
+}
+.sir-maps canvas { width: 510px; height: 510px; max-width: 100%; }
+.reveal .sir-maps figcaption, .reveal .sir-snapshots figcaption {
+  font-style: normal; font-size: .88em; color: #202020; margin: .15em 0;
+}
+.sir-playback {
+  display: grid; grid-template-columns: 4em 4em 3.8em 1fr;
+  align-items: center; gap: .7em; margin: .35em 2% .2em;
+  font-size: .88em; font-variant-numeric: tabular-nums;
+}
+.sir-playback button {
+  font: inherit; cursor: pointer; padding: .05em .3em; border-radius: 5px;
+  border: 1px solid #202020; background: #202020; color: white;
+}
+.sir-playback input { width: 100%; accent-color: #222; }
+.sir-legend { align-items: center; font-size: .8em; }
+.sir-key.susceptible::before { background:#E6E6E3; border:1px solid #999; box-sizing:border-box; }
+.sir-key { white-space: nowrap; }
+.sir-key::before {
+  content: ""; display: inline-block; width: .65em; height: .65em;
+  margin-right: .27em; background: currentColor;
+}
+.sir-snapshots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4%; margin-top: 1.05em; text-align: center; }
+.sir-snapshots canvas { width: 100%; max-width: 310px; height: auto; }
+.reveal #sir-observations h2 { margin-bottom: .5em; }
+.reveal #sir-observations .sir-snapshots { margin-top: .7em; }
+.reveal .sir-note { margin: .45em 0 .8em; font-size: .8em; color: #505050; }
+.reveal .sir-note p { margin: 0; }
+
+.reveal .neural-slide h2 { margin-bottom: .85em; }
+.reveal .neural-slide > p { margin-bottom: .75em; }
+.cde-flow {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1.35fr) max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  column-gap: .25em;
+  margin: 0 0 1.5em;
+}
+.reveal .cde-flow p { margin: 0; }
+.cde-pairs { margin-inline-end: .8em; }
+.cde-flow svg { width: 100%; display: block; }
+.cde-input-arrows { height: 5.25em; }
+.cde-output-arrow { height: 30px; }
+.cde-estimator {
+  padding: .42em .65em;
+  border: 1.5px solid #393939;
+  border-radius: 5px;
+  background: white;
+  font-weight: 400;
+}
+.reveal .cde-approximation { margin-bottom: .8em; }
+.reveal .cde-approximation p {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
+  align-items: center;
+  column-gap: .3em;
+}
+.cde-equation { grid-column: 2; font-size: 1.18em; }
+.cde-annotation {
+  display: flex;
+  align-items: center;
+  gap: .3em;
+  color: #222;
+}
+.cde-name { font-size: .85em; line-height: 1.25; }
+.cde-name strong { display: block; }

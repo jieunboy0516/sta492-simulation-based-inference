@@ -1,0 +1,119 @@
+<div class="flow-player" role="group" aria-label="Learned SIR transport for the observed outbreak">
+<canvas id="sir-flow-canvas" width="1840" height="1100" role="img" aria-label="Samples following the learned velocity field from Gaussian noise to the fitted SIR posterior, over the current sample density"></canvas>
+<div class="flow-controls"><button type="button" id="flow-play" disabled>Play</button><input type="range" min="0" max="1000" value="0" id="flow-time" aria-label="Transport time" disabled><output id="flow-clock" for="flow-time">0.00</output></div>
+</div>
+<script>
+(() => {
+  const {frames, views, ticks, gridSide, colors} = JSON.parse(document.querySelector('#flow-frames').textContent);
+  const canvas = document.querySelector('#sir-flow-canvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.querySelector('#flow-time');
+  const play = document.querySelector('#flow-play');
+  const clock = document.querySelector('#flow-clock');
+  const top = 53, side = 346, bottom = top + side;
+  const duration = 11500;
+  const images = frames.map(frame => frame.heatmap.map(url => {
+    const img = new Image();
+    img.src = url;
+    return img;
+  }));
+  let animation = 0;
+  const mix = (a,b,f) => a + (b-a)*f;
+  function label(text,x,y,size=23,align='left') {
+    ctx.fillStyle='#202020'; ctx.font=size+'px "EB Garamond", Georgia, serif';
+    ctx.textAlign=align; ctx.fillText(text,x,y);
+  }
+  function arrow(x,y,dx,dy) {
+    const speed=Math.hypot(dx,dy);
+    if(speed < 0.8) return;
+    const length=Math.min(speed,side/gridSide*.76);
+    const ux=dx/speed, uy=dy/speed;
+    const tipX=x+length*ux, tipY=y+length*uy;
+    const head=Math.min(length*.48,5.4);
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(tipX,tipY);
+    ctx.lineTo(tipX-head*(ux+.65*uy),tipY-head*(uy-.65*ux));
+    ctx.moveTo(tipX,tipY);ctx.lineTo(tipX-head*(ux-.65*uy),tipY-head*(uy+.65*ux));
+    ctx.strokeStyle='rgba(18,28,35,.72)';ctx.lineWidth=3.6;ctx.stroke();
+    ctx.strokeStyle='#f3f7fa';ctx.lineWidth=1.6;ctx.stroke();
+  }
+  function sample(x,y) {
+    ctx.beginPath();ctx.arc(x,y,2.7,0,2*Math.PI);
+    ctx.fillStyle='#ff9853';ctx.fill();ctx.strokeStyle='#301c16';ctx.lineWidth=1.35;ctx.stroke();
+  }
+  function panel(view,left,i,j,f) {
+    const [xmin,xmax,ymin,ymax]=views[view];
+    const px=x=>left+side*(x-xmin)/(xmax-xmin);
+    const py=y=>bottom-side*(y-ymin)/(ymax-ymin);
+    ctx.save();ctx.beginPath();ctx.rect(left,top,side,side);ctx.clip();
+    ctx.drawImage(images[i][view],left,top,side,side);
+    if(j!==i) {
+      ctx.globalAlpha=f;
+      ctx.drawImage(images[j][view],left,top,side,side);
+      ctx.globalAlpha=1;
+    }
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.globalAlpha=.58;
+    frames[i].velocities[view].forEach((v,k)=>{
+      const next=frames[j].velocities[view][k];
+      const x=left+side*(k%gridSide+.5)/gridSide;
+      const y=bottom-side*(Math.floor(k/gridSide)+.5)/gridSide;
+      arrow(x,y,side*.085*mix(v[0],next[0],f)/(xmax-xmin),
+               -side*.085*mix(v[1],next[1],f)/(ymax-ymin));
+    });
+    ctx.globalAlpha=.78;
+    frames[i].points.forEach((p,k)=>{
+      const next=frames[j].points[k];
+      sample(px(mix(p[0],next[0],f)),py(mix(p[1],next[1],f)));
+    });
+    ctx.restore();
+    if(view===0) {
+      const [x0,x1,y0,y1]=views[1];
+      ctx.strokeStyle='white';ctx.lineWidth=1.4;
+      ctx.strokeRect(px(x0),py(y1),px(x1)-px(x0),py(y0)-py(y1));
+    }
+    const [xticks,yticks]=ticks[view];
+    xticks.forEach(v=>label(String(+v.toFixed(3)),px(v),bottom+25,22,'center'));
+    yticks.forEach(v=>label(String(+v.toFixed(3)),left-10,py(v)+7,22,'right'));
+    label('θ₁',left+side/2,bottom+61,28,'center');
+    ctx.save();ctx.translate(left-58,top+side/2);ctx.rotate(-Math.PI/2);
+    label('θ₂',0,0,28,'center');ctx.restore();
+
+  }
+  function paint() {
+    const t=Number(slider.value)/1000, index=t*(frames.length-1);
+    const i=Math.floor(index), j=Math.ceil(index), f=index-i;
+    ctx.setTransform(2,0,0,2,0,0);
+    ctx.clearRect(0,0,920,550);
+    label('Full transport',248,32,28,'center');
+    label('SIR parameter space',718,32,28,'center');
+    panel(0,75,i,j,f);
+    panel(1,545,i,j,f);
+    sample(95,508);label('Sample',109,515,23);
+    arrow(232,509,24,-6);label('Velocity field',269,515,23);
+    label('Fraction of peak density',455,515,23);
+    const barX=700, barWidth=170;
+    colors.forEach((c,k)=>{ctx.fillStyle=c;ctx.fillRect(barX+k*barWidth/256,496,barWidth/256+1,12);});
+    [0,.5,1].forEach(d=>label(String(d),barX+barWidth*d,532,18,'center'));
+    clock.value=t.toFixed(2);
+  }
+  function pause() {cancelAnimationFrame(animation);animation=0;play.textContent='Play';}
+  play.addEventListener('click',()=>{
+    if(animation){pause();return;}
+    if(+slider.value===1000)slider.value=0;
+    const start=performance.now()-duration*Number(slider.value)/1000;
+    play.textContent='Pause';
+    function tick(now) {
+      slider.value=Math.min(1000,1000*(now-start)/duration);
+      paint();
+      if(+slider.value===1000)pause();else animation=requestAnimationFrame(tick);
+    }
+    animation=requestAnimationFrame(tick);
+  });
+  slider.addEventListener('input',()=>{pause();paint();});
+  const slide=canvas.closest('section');
+  new MutationObserver(()=>{if(!slide.classList.contains('present'))pause();}).observe(slide,{attributes:true,attributeFilter:['class']});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+  Promise.all([...images.flat().map(im=>im.decode()),document.fonts.ready]).then(()=>{
+    paint();play.disabled=slider.disabled=false;
+  });
+})();
+</script>

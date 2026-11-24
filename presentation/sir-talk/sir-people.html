@@ -1,0 +1,22 @@
+<div class="sir-people">
+<svg viewBox="0 0 380 370" role="img" aria-label="Contact with an infectious person can move a susceptible person into the exposed state. An infectious person can recover.">
+  <defs>
+    <g id="sir-person" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cy="-24" r="9"/>
+      <path d="M0 -12 v24 M-15 4 l15 -15 15 15 M-12 33 l12 -21 12 21"/>
+    </g>
+  </defs>
+  <g transform="translate(0 90)">
+    <g class="infectious"><use href="#sir-person" x="33"/><text x="33" y="60">I</text></g>
+    <g class="susceptible"><use href="#sir-person" x="87"/><text x="87" y="60">S</text></g>
+    <path class="change" d="M137 0h56m-8 -8 8 8 -8 8"/>
+    <g class="infectious"><use href="#sir-person" x="243"/><text x="243" y="60">I</text></g>
+    <g class="exposed"><use href="#sir-person" x="297"/><text x="297" y="60">E</text></g>
+  </g>
+  <g transform="translate(0 275)">
+    <g class="infectious"><use href="#sir-person" x="87"/><text x="87" y="60">I</text></g>
+    <path class="change" d="M137 0h56m-8 -8 8 8 -8 8"/>
+    <g class="recovered"><use href="#sir-person" x="243"/><text x="243" y="60">R</text></g>
+  </g>
+</svg>
+</div>

@@ -1,0 +1,26 @@
+::: {.cde-pairs}
+$\begin{gathered}
+(x^{(1)},\theta^{(1)})\\[0.3em]
+\vdots\\[0.3em]
+(x^{(n)},\theta^{(n)})
+\end{gathered}$
+:::
+
+~~~{=html}
+<svg class="cde-input-arrows" viewBox="0 0 180 160" preserveAspectRatio="none" aria-hidden="true">
+  <g fill="none" stroke="#202020" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M3 17 L174 65 m-8 -7 8 7 -11 2"/>
+    <path d="M3 143 L174 95 m-11 -2 11 2 -8 7"/>
+  </g>
+</svg>
+~~~
+
+::: {.cde-estimator}
+Neural CDE
+:::
+
+~~~{=html}
+<svg class="cde-output-arrow" viewBox="0 0 120 30" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M2 15 H114 m-9 -5 9 5 -9 5" fill="none" stroke="#202020" stroke-width="2.5"/>
+</svg>
+~~~

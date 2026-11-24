@@ -1,0 +1,467 @@
+---
+title: "Simulation-based Inference"
+format:
+  revealjs:
+    embed-resources: true
+    html-math-method: katex
+    transition: none
+    background-transition: none
+    slide-number: false
+    progress: false
+    controls: false
+    menu: false
+    center: true
+    slide-level: 2
+    theme: [default, slides.scss]
+    css: lecture.css
+    auto-stretch: false
+    width: 1280
+    height: 960
+---
+
+# Bayesian Recap
+
+## Data Generating Process {.center .recap-slide}
+
+We observe $X \sim p_0$.
+
+::: {.fragment}
+$p_0$ is the *data generating process*.
+:::
+
+::: {.fragment}
+How can we use $X$ to make inferences about $p_0$?
+:::
+
+## Bayesian Approach {.center .recap-slide}
+
+Assume $p_0 \in \mathcal{P} = \{p(\cdot \mid \theta) : \theta \in \Theta\}$.
+
+::: {.fragment}
+The prior $p(\theta)$ describes our uncertainty before observing $x$.
+:::
+
+::: {.fragment}
+After observing $X=x$, update by Bayes’ rule.
+
+$$
+p(\theta \mid x)
+= \frac{p(x \mid \theta)\,p(\theta)}{p(x)}
+\propto p(x \mid \theta)\,p(\theta).
+$$
+:::
+
+## {#from-bayes-to-sbi .inference-slide}
+
+::: {.bayes-line}
+[$p(\theta\mid x)$]{#bayes-post} $\propto$ [$p(x\mid\theta)$]{#bayes-like} [$p(\theta)$]{#bayes-prior}
+:::
+
+:::::: {.conjugacy .fragment .fade-out fragment-index="2"}
+::::: {.fragment fragment-index="0"}
+### Conjugacy
+
+::: {.case-intro}
+Let $x$ count successes in $n$ independent trials with success probability $\theta$ and a $\operatorname{Beta}(a,b)$ prior.
+:::
+
+::: {.example-prior}
+[$\displaystyle p(\theta)=\frac{\theta^{a-1}(1-\theta)^{b-1}}{\mathrm{B}(a,b)}$]{#conj-prior}
+:::
+
+::: {.example-likelihood}
+[$\displaystyle p(x\mid\theta)=\binom{n}{x}\theta^x(1-\theta)^{n-x}$]{#conj-like}
+:::
+
+:::::
+::::: {.fragment fragment-index="1"}
+::: {.example-posterior}
+[$\displaystyle p(\theta\mid x)=\frac{\theta^{a+x-1}(1-\theta)^{b+n-x-1}}{\mathrm{B}(a+x,b+n-x)}$]{#conj-post}
+:::
+:::::
+::::::
+
+::::: {.mh .fragment .fade-in-then-out fragment-index="2"}
+### Markov-Chain Monte Carlo
+
+::: {.mh-proposal}
+Draw $\theta' \sim q(\cdot\mid\theta)$.
+:::
+
+::: {.mh-update}
+Set $r=$ [[[$p(x\mid\theta')$]{#mh-like} [$p(\theta')$]{#mh-prior} $q(\theta\mid\theta')$]{.numerator} [$p(x\mid\theta)\,p(\theta)\,q(\theta'\mid\theta)$]{.denominator}]{.fraction}.
+:::
+
+::: {.mh-decision}
+Draw $u\sim\operatorname{Uniform}(0,1)$.
+
+If $u < \min(1,r)$, set $\theta \leftarrow \theta'$.
+:::
+:::::
+
+::::: {.sbi .fragment fragment-index="3"}
+### Simulation-based inference
+
+::: {.case-intro}
+Assume we can sample from the prior and the simulator, even when the likelihood is intractable.
+:::
+
+::: {.example-prior}
+[$\theta \sim p(\theta)$]{#sbi-prior}
+:::
+
+::: {.example-likelihood}
+[$X \sim p(\cdot\mid\theta)$]{#sbi-like}
+:::
+
+::: {.simulator-callout}
+[we call this the simulator]{#simulator-name}
+:::
+
+:::::
+
+{{< include bayes-arrows.html >}}
+
+# Introduction to Simulation-based Inference
+
+## Epidemiology {#epidemiology .epi-slide}
+
+::: {.epi-questions}
+What is the probability of infection after contact with an infectious person?
+
+What is the probability of recovery in one time step?
+:::
+
+{{< include sir-people.html >}}
+
+## Let’s make a simulator {#sir-simulator .epi-slide}
+
+::: {.sir-parameters}
+$\theta = (\theta_1, \theta_2)$  
+Per time step
+
+~~~{=html}
+<div class="sir-parameter">
+  <label for="sir-p">Transmission per infectious neighbor</label>
+  <div class="sir-adjust"><span><i>θ</i><sub>1</sub> = <output id="sir-p-value" for="sir-p">0.499</output></span><input id="sir-p" type="range" aria-label="Theta 1, transmission per infectious neighbor" min="0" max="1" step="any" value="0.4989631228474053"></div>
+</div>
+<div class="sir-parameter">
+  <label for="sir-q">Recovery per infectious person</label>
+  <div class="sir-adjust"><span><i>θ</i><sub>2</sub> = <output id="sir-q-value" for="sir-q">0.265</output></span><input id="sir-q" type="range" aria-label="Theta 2, recovery per infectious person" min="0" max="1" step="any" value="0.26451491183267895"></div>
+</div>
+~~~
+:::
+
+~~~{=html}
+<div class="sir-maps" role="group" aria-label="Spatial SIR simulator">
+  <div class="sir-map-pair">
+    <figure><figcaption>Simulated states</figcaption><canvas id="sir-states" role="img"></canvas></figure>
+    <figure><figcaption id="sir-visit-caption">Last observation</figcaption><canvas id="sir-visit" role="img"></canvas></figure>
+  </div>
+  <div class="sir-playback">
+    <button type="button" id="sir-play">Play</button>
+    <button type="button" id="sir-reset">Reset</button>
+    <label for="sir-time">Step <output id="sir-clock" for="sir-time">8</output></label>
+    <input id="sir-time" type="range" min="0" max="32" step="1" value="8">
+  </div>
+  <div class="sir-legend"><span>One person per cell</span><span class="sir-key susceptible">Susceptible</span><span class="sir-key exposed">Exposed (8 steps)</span><span class="sir-key infectious">Infectious</span><span class="sir-key recovered">Recovered</span></div>
+</div>
+~~~
+
+## Real-world observations {#sir-observations .epi-slide}
+
+Our “real-world” observation $x^*$ is one simulated outbreak at $\theta\approx(0.499,0.265)$. Here are the first three of eight visits.
+
+~~~{=html}
+<div class="sir-snapshots">
+  <figure><canvas data-sir-visit="4" role="img"></canvas><figcaption><i>t</i> = 4</figcaption></figure>
+  <figure><canvas data-sir-visit="8" role="img"></canvas><figcaption><i>t</i> = 8</figcaption></figure>
+  <figure><canvas data-sir-visit="12" role="img"></canvas><figcaption><i>t</i> = 12</figcaption></figure>
+</div>
+~~~
+
+::: {.sir-note}
+Red cells were recorded as infectious.
+:::
+
+We want to find the posterior $p(\theta \mid x^*)$.
+
+# Neural Methods for SBI
+
+## Conditional density estimation {#conditional-density-estimation .neural-slide data-menu-title="Neural likelihood estimation"}
+
+Generate $\theta \sim p(\theta)$, then $x \sim p(x \mid \theta)$.
+
+Parameterize the conditional density $q$ with a neural network $q_\phi$.
+
+:::: {.cde-flow role="group" aria-label="Simulated data and parameter pairs train a neural conditional density estimator to approximate the likelihood."}
+
+{{< include _cde-training.qmd >}}
+
+::: {.cde-output}
+$q_\phi(x\mid\theta)$
+:::
+::::
+
+::: {.fragment .cde-approximation fragment-index="0"}
+[$q_\phi(x\mid\theta) \approx p(x\mid\theta)$]{.cde-equation} [[$\leftarrow$]{.cde-pointer aria-hidden="true"} [call this **Neural Likelihood Estimation (NLE)**]{.cde-name}]{.cde-annotation}
+:::
+
+::: {.fragment .training-loss fragment-index="1"}
+Train by minimizing $\mathcal L_{\mathrm{NLE}}(\phi)=\mathbb E[-\log q_\phi(x\mid\theta)]$
+:::
+
+::: {.fragment fragment-index="2"}
+Run MCMC with target proportional to $q_\phi(x^*\mid\theta)\,p(\theta)$.
+:::
+
+## Conditional density estimation {#neural-posterior-estimation .neural-slide data-menu-title="Neural posterior estimation"}
+
+Generate $\theta \sim p(\theta)$, then $x \sim p(x \mid \theta)$.
+
+Parameterize the conditional density $q$ with a neural network $q_\phi$.
+
+:::: {.cde-flow role="group" aria-label="Simulated data and parameter pairs train a neural conditional density estimator."}
+
+{{< include _cde-training.qmd >}}
+
+::: {.cde-output}
+[[$q_\phi(x\mid\theta)$]{.fragment .fade-out fragment-index="0"} [$q_\phi(\theta\mid x)$]{.fragment fragment-index="0"}]{.r-stack}
+:::
+::::
+
+::: {.cde-approximation}
+[[$q_\phi(x\mid\theta) \approx p(x\mid\theta)$]{.fragment .fade-out fragment-index="0"} [$q_\phi(\theta\mid x) \approx p(\theta\mid x)$]{.fragment fragment-index="0"}]{.cde-equation .r-stack} [[$\leftarrow$]{.cde-pointer aria-hidden="true"} [call this [[**~~Neural Likelihood Estimation (NLE)~~**]{.fragment .fade-out fragment-index="0"} [**Neural Posterior Estimation (NPE)**]{.fragment fragment-index="0"}]{.r-stack}]{.cde-name}]{.cde-annotation}
+:::
+
+::: {.training-loss}
+Train by minimizing [[$\mathcal L_{\mathrm{NLE}}(\phi)=\mathbb E[-\log q_\phi(x\mid\theta)]$]{.fragment .fade-out fragment-index="0"} [$\mathcal L_{\mathrm{NPE}}(\phi)=\mathbb E[-\log q_\phi(\theta\mid x)]$]{.fragment fragment-index="0"}]{.r-stack}
+:::
+
+::: {.fragment fragment-index="1"}
+Use $q_\phi$ as the posterior.
+:::
+
+## Transport maps {#transport-maps .figure-slide .transport-slide}
+
+For every $x$, draw $\eta \sim \mathcal N(0,I)$ and transform it into
+
+$$\theta = T_\phi(\eta; x) \sim q_\phi(\theta \mid x).$$
+
+<img class="talk-figure" src="figures/transport.svg" alt="Two density heatmaps. The standard Gaussian is centered at zero. The fitted SIR posterior shows transmission and recovery probabilities for the observed outbreak. Yellow marks the highest density in each panel.">
+
+## Normalizing flows {#normalizing-flows .figure-slide .transport-slide}
+
+:::: {.nf-derivation}
+For fixed $x$, the [inverse]{.nf-inverse data-word="inverse"} and [Jacobian determinant]{.nf-jacobian data-word="jacobian"} must be tractable since
+
+::: {.fragment .nf-equation}
+$q_\phi(\theta \mid x) = \mathcal N\!\bigl($[$T_\phi^{-1}(\theta; x)$]{.nf-inverse data-term="inverse"}$\mid 0,I\bigr)$ [$\displaystyle\left|\det \frac{\partial T_\phi^{-1}(\theta; x)}{\partial \theta}\right|$]{.nf-jacobian data-term="jacobian"}$.$
+:::
+
+{{< include normalizing-arrows.html >}}
+::::
+
+::: {.fragment .flow-paper-panel}
+<img src="figures/dax-fig1-npe.png" alt="The NPE panel shows the observation conditioning each invertible layer of a discrete flow. At right are transformed samples for the paper’s two-moons example.">
+
+[Dax et al. (2023), Fig. 1, NPE panel](https://arxiv.org/pdf/2305.17161#page=2)
+:::
+
+::: {.fragment .flow-takeaway}
+**This architecture is limiting.**
+:::
+
+::: {.fragment}
+Can we develop more flexible architectures for density estimation?
+:::
+
+# Research Direction I:<br>Generative Modeling for SBI {#research-direction-i-generative-modeling-for-sbi}
+
+## Flow matching {#flow-matching .figure-slide .transport-slide}
+
+Learn a vector field $v_{t,x}$ whose flow takes samples from $\mathcal N(0,I)$ to the learned posterior $q_\phi(\theta\mid x)$ by minimizing
+
+$$\mathcal L_{\mathrm{FM}}(v)
+=\mathbb E_{\theta,x,\eta,t}\!\left[\left\|v_{t,x}(\theta_t)-(\theta-\eta)\right\|^2\right].$$
+
+::: {.flow-paper-panel}
+<img src="figures/dax-fig1-fmpe.png" alt="In the paper’s two-moons example, a network takes the observation, current state and time, and outputs the velocity that moves Gaussian samples toward the posterior.">
+
+[Dax et al. (2023), Fig. 1, FMPE panel](https://arxiv.org/pdf/2305.17161#page=2)
+:::
+
+Flow matching imposes no special architectural constraints on the neural network that parameterizes $v_{t,x}$.
+
+<!-- Temporarily omitted from the talk.
+## Score matching {#score-matching .figure-slide .transport-slide}
+
+Perturb $\theta$ to $\theta_t=\alpha_t\theta+\sigma_t\eta$, with $\eta\sim\mathcal N(0,I)$. Learn the noisy posterior score $s_{t,x}(\theta_t)\approx\nabla_{\theta_t}\log p_t(\theta_t\mid x)$ by minimizing
+
+$$\mathcal L_{\mathrm{SM}}(s)
+=\mathbb E_{\theta,x,\eta,t}\!\left[\left\|\sigma_t\,s_{t,x}(\theta_t)+\eta\right\|^2\right].$$
+
+::: {.flow-paper-panel}
+<img src="figures/sharrock-fig1-npse.png" alt="In the two-moons example, adding noise turns the two posterior crescents into a Gaussian cloud. The learned score guides the reverse process back to the crescent-shaped posterior.">
+
+[Sharrock et al. (2024), Fig. 1, two-moons example](https://proceedings.mlr.press/v235/sharrock24a.html)
+:::
+
+At $x^*$, start from Gaussian noise and use the learned score to run the diffusion backward for a posterior draw.
+-->
+
+## Sampling and density evaluation {#flow-sampling-density .figure-slide .transport-slide}
+
+For fixed $x$, numerically integrate the flow-matching ODE $\dot\theta(t)=v_{t,x}(\theta(t))$.
+
+:::: {.flow-operations}
+::: {.flow-operation}
+**Sampling**
+
+Start at $\theta(0)=\theta_0\sim\mathcal N(0,I)$.
+
+Integrate forward from $t=0$ to $1$.
+
+Return $\theta(1)$ as the posterior draw.
+:::
+
+::: {.flow-operation}
+**Density evaluation**
+
+Start at $\theta(1)=\theta$.
+
+Integrate backward from $t=1$ to $0$.
+
+$$\begin{aligned}
+\log q_\phi(\theta\mid x)
+  &= \log \mathcal N(\theta(0)\mid 0,I)\\
+  &\quad - \int_0^1 (\operatorname{div} v_{t,x})(\theta(t))\,dt .
+\end{aligned}$$
+:::
+::::
+
+[Dax et al. (2023), *Flow Matching for Scalable Simulation-Based Inference*, Eqs. (2)–(3)](https://arxiv.org/pdf/2305.17161#page=4){.flow-source}
+
+## Flow matching in the SIR example {#sir-flow-matching .figure-slide .transport-slide}
+
+Condition on all eight observed maps $x^*$. Start each draw at $\theta_0=\eta\sim\mathcal N(0,I)$ and follow $\dot\theta_t=v_{t,x^*}(\theta_t)$ to $t=1$.
+
+{{< include flow-data.html >}}
+
+{{< include flow-player.html >}}
+
+# Research Direction II:<br>Summary Statistics {#summary-statistics}
+
+## From eight maps to eight counts {#counts .figure-slide}
+
+<img class="talk-figure" src="figures/counts.svg" alt="Eight infectious maps at four-step visits and the infectious count under each.">
+
+$$x \in \{0,1\}^{8\times24\times24}
+\quad\longmapsto\quad s(x)=(C_4,C_8,\ldots,C_{32}).$$
+
+## Who stayed infectious? {#persistence .figure-slide}
+
+<img class="talk-figure" src="figures/persistence-delay8.svg" alt="Five cells were infectious at step 12. Three of those same cells were still infectious at step 16. The outlines mark them on both maps.">
+
+$$\Pr(I_{t+4,j}=1\mid I_{t,j}=1,\theta_2)=(1-\theta_2)^4.$$
+
+## What does the summary keep? {#summary-posterior .figure-slide}
+
+Keep the simulations whose summaries are closest to $s(x^*)$.
+
+<img class="talk-figure" src="figures/summary-posteriors-delay8.svg" alt="Central 90 percent ABC intervals for recovery from the eight observed maps. The interval is 0.162 to 0.347 using counts and 0.169 to 0.311 when persistence is included.">
+
+Central 90% rejection-ABC intervals for the eight observed maps.
+
+# Research Direction III:<br>Model Misspecification {#misspecification}
+
+## When the truth lies outside the model {#model-gap .figure-slide}
+
+<img class="talk-figure" src="figures/model-gap.svg" alt="A model family encloses candidate distributions. A dotted segment labeled epsilon connects the family to the data-generating distribution.">
+
+$$\varepsilon = \inf_{\theta\in\Theta}D\!\left[p_0(x):p(x\mid\theta)\right]>0$$
+
+## Introducing misspecification to SIR {#delayed-onset .figure-slide}
+
+::: {.mechanisms}
+Misspecified simulator
+
+$\mathrm S \longrightarrow \mathrm I \longrightarrow \mathrm R$
+
+Data-generating process
+
+$\mathrm S \longrightarrow \underset{\text{eight steps}}{\mathrm E} \longrightarrow \mathrm I \longrightarrow \mathrm R$
+:::
+
+## Simulating delayed infectiousness {#delayed-simulator .epi-slide}
+
+~~~{=html}
+<div class="onset-control">
+  <label for="delay-onset">Delay before infectiousness</label>
+  <select id="delay-onset"><option value="8" selected>8 steps</option><option value="0">Immediate onset</option></select>
+</div>
+<div class="sir-maps" role="group" aria-label="Outbreak simulation with selectable delay">
+  <div class="sir-map-pair">
+    <figure><figcaption id="delay-state-caption">Simulated states</figcaption><canvas id="delay-states" role="img"></canvas></figure>
+    <figure><figcaption id="delay-visit-caption">Last simulated visit</figcaption><canvas id="delay-visit" role="img"></canvas></figure>
+  </div>
+  <div class="sir-playback">
+    <button type="button" id="delay-play">Play</button>
+    <button type="button" id="delay-reset">Reset</button>
+    <label for="delay-time">Step <output id="delay-clock" for="delay-time">8</output></label>
+    <input id="delay-time" type="range" min="0" max="32" step="1" value="8">
+  </div>
+  <div class="sir-legend"><span>One person per cell</span><span class="sir-key susceptible">Susceptible</span><span class="sir-key exposed">Exposed</span><span class="sir-key infectious">Infectious</span><span class="sir-key recovered">Recovered</span></div>
+</div>
+~~~
+
+{{< include sir-replay.html >}}
+
+## The effect of misspecification {#biased-posterior .figure-slide}
+
+<img class="talk-figure" src="figures/misspecification-posteriors.svg" alt="Six heatmaps of joint log posterior density for transmission and recovery. The rows are well-specified and misspecified. Both use the same MCMC reference. The solid and dashed contours enclose 50% and 90% posterior mass.">
+
+## Joint highest posterior density regions {#coverage .figure-slide}
+
+<img class="talk-figure" src="figures/coverage-joint-hpd-delay8.svg" alt="Joint HPD coverage for transmission and recovery across 192 held-out eight-step-delay outbreaks. Both NPE curves fall below the calibration diagonal. The immediate-onset fit has lower coverage at every plotted level.">
+
+The 90% region contained the true $(\theta_1,\theta_2)$ in **153/192** outbreaks with matched training and **48/192** with immediate-onset training.
+
+## Dealing with model misspecification {#dealing-with-misspecification .figure-slide}
+
+1. Average independently trained posterior estimates.\
+   [Cannon et al. (2022)](https://arxiv.org/pdf/2209.01845#page=6)
+2. Learn robust summary statistics through regularization.\
+   [Huang et al. (2023)](https://proceedings.neurips.cc/paper_files/paper/2023/file/16c5b4102a6b6eb061e502ce6736ad8a-Paper-Conference.pdf)
+3. Model the simulator discrepancy explicitly.\
+   [Ward et al. (2022)](https://papers.neurips.cc/paper_files/paper/2022/hash/db0eac6747e3631eb91095cd76065611-Abstract-Conference.html)
+
+# Research Direction IV:<br>New advances {#new-advances}
+
+## NPE-PFN {#npe-pfn .figure-slide}
+
+::: {.talk-chain}
+Simulated pairs + $x^*$
+
+$\downarrow$
+
+Pretrained tabular model
+
+$\downarrow$
+
+Posterior draws
+:::
+
+[Vetter et al., NeurIPS 2025](https://papers.nips.cc/paper_files/paper/2025/hash/770cabd044c4eacb6dc5924d9a686dce-Abstract-Conference.html)
+
+# Conclusion
+
+## What determines the posterior? {#takeaways .figure-slide}
+
+**The simulator** sets the family of possible observations.
+
+**The summary** determines which evidence reaches the estimator.
+
+**Coverage** asks how often a credible region contains the generating parameter pair.
+
+NPE-PFN changes how we learn from simulations. These checks still apply.
