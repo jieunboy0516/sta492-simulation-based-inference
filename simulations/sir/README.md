@@ -56,17 +56,48 @@ python compare_raw_grid.py --model direct --training-outbreaks 2000
 python compare_raw_grid.py --model direct --training-outbreaks 36000
 ~~~
 
-For the CNN, use \`--model cnn\` or omit \`--model\`. Both comparisons use the
+For the CNN, use `--model cnn` or omit `--model`. All training budgets use the
 same 4,000 test outbreaks. The CNN commands save the scores for the CNN and
 the summary models. The direct commands save their results separately.
 
 | Training outbreaks | Summary and CNN results | Direct NPE results |
 | ---: | --- | --- |
 | 2,000 | [Scores](results/small_budget_comparison.json) | [Scores and posterior](results/direct_comparison_2000.json) |
+| 10,000 | [Scores](results/medium_budget_comparison.json) | [Scores and posterior](results/direct_comparison_10000.json) |
 | 36,000 | [Scores](results/raw_comparison.json) | [Scores and posterior](results/direct_comparison_36000.json) |
 
-Run \`python plot_comparison.py\` to regenerate the comparison plots from
-these saved numbers.
+Run `python plot_comparison.py` to regenerate the comparison plots from
+the saved 2,000- and 36,000-outbreak results.
+
+## Reproduce the C2ST and MMD charts
+
+The C2ST line chart uses 2,000, 10,000, and 36,000 training outbreaks.
+The 10,000-outbreak runs use the first 10,000 training examples and the
+same validation set and training settings as the 2,000-outbreak runs.
+To generate the new results and draws:
+
+~~~sh
+python compare_raw_grid.py --model cnn --training-outbreaks 10000 --save-test-draws
+python compare_raw_grid.py --model direct --training-outbreaks 10000 --save-test-draws
+~~~
+
+Run `python posterior_diagnostics.py` to recompute both charts from the saved
+test draws and the same 4,000 holdout outbreaks. This uses the scikit-learn
+version listed in `requirements.txt`.
+
+The script compares two pairs for each test outbreak: its maps with the true
+simulation parameters and its maps with one draw from the fitted posterior.
+C2ST measures the accuracy of a separate classifier in telling the two
+sources apart. Squared MMD compares the two collections through Gaussian
+similarities on the maps and parameters. Their reference values are 50%
+and 0, respectively.
+
+The six `test_draws_*.npz` files contain the test indices, true parameter
+pairs, and one posterior draw per test outbreak for each fitted model.
+To recreate them, add `--save-test-draws` to each training command. Run
+both `--model cnn` and `--model direct` at each budget. The CNN commands
+also save the draws from the summary models. The measured scores are in
+[results/posterior_diagnostics.json](results/posterior_diagnostics.json).
 
 To rebuild the report PDF, run `pdflatex -interaction=nonstopmode -halt-on-error report.tex`
 twice from this directory. The report describes the saved run and uses the figures

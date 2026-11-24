@@ -231,8 +231,8 @@ outbreaks, and both budgets used the same 4{,}000 test outbreaks.
 \centering
 \includegraphics[width=0.92\linewidth]{results/summary_comparison.pdf}
 \caption{Average log density assigned to the true parameter pair $(p,q)$
-over the 4{,}000 test outbreaks. Higher is better. The counts-only model
-was evaluated at the larger training budget.}
+over the 4{,}000 test outbreaks. Higher is better. All four models were
+evaluated at both training budgets.}
 \label{fig:raw-map-comparison}
 \end{figure}
 
@@ -246,10 +246,57 @@ the generating values.}
 \label{fig:summary-tradeoff}
 \end{figure}
 
-The summaries beat direct NPE at 2{,}000 training outbreaks (2.65 vs. 2.21).
-At 36{,}000, direct NPE pulled ahead (3.13 vs. 2.91). The CNN scored highest
-at both budgets. Direct NPE uses 690{,}060 weights because each coupling
-layer receives the entire grid vector.
+With 2{,}000 training outbreaks, overlaps raised the score from 1.95 to 2.65,
+ahead of direct NPE at 2.21. At 36{,}000, direct NPE scored 3.13 versus
+2.91 with counts and overlaps. The CNN scored highest at both budgets.
+Direct NPE uses 690{,}060 weights because each coupling layer receives
+the entire grid vector.
+
+\newpage
+\reportsection{6. Can we tell the posterior draws apart?}
+
+For each of the 4{,}000 test outbreaks we make two pairs. The first is
+$(x_i,\theta_i)$, the maps and the parameter pair that generated them.
+The second is $(x_i,\widehat\theta_i)$, the same maps and one draw from
+the fitted posterior. A correct posterior gives these pairs the same
+joint distribution across outbreaks.
+
+\textbf{Classifier two-sample test (C2ST).}
+A separate classifier tries to identify the source of each pair
+(\href{https://arxiv.org/abs/1610.06545}{Lopez-Paz and Oquab}).
+It sees the parameter pair, counts and overlaps, and counts in
+$4\times4$ blocks of each map. We train it on both rows from 2{,}000
+outbreaks and measure its accuracy on the other 2{,}000. Both rows for
+an outbreak stay on the same side of the split.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.96\linewidth]{results/c2st_comparison.pdf}
+\caption{C2ST accuracy at 2{,}000, 10{,}000, and 36{,}000 training outbreaks.
+The dashed line marks 50\% chance accuracy. Whiskers show one standard
+error. The 10{,}000-outbreak fits use the 2{,}000-run training settings.}
+\end{figure}
+
+\textbf{Maximum mean discrepancy (MMD).}
+We compare the pairs using Gaussian similarities on both the full maps
+and the two parameters
+(\href{https://www.jmlr.org/papers/v13/gretton12a.html}{Gretton et al.}).
+We set the similarity scales from the validation outbreaks and omit terms
+that compare an outbreak with itself. This estimates squared MMD while
+accounting for the paired maps.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.96\linewidth]{results/mmd_comparison.pdf}
+\caption{Squared MMD on the same 4{,}000 outbreaks, multiplied by
+$10^3$ for readability. Zero is the reference value. The finite-sample
+estimate can be slightly negative.}
+\end{figure}
+
+All four C2ST lines move toward 50\% across the measured budgets. Direct
+NPE makes its largest drop by 10{,}000, and the CNN is closest to chance
+at each budget. Adding overlaps improves C2ST at all three budgets and
+squared MMD at the two shown.
 
 \newpage
 \reportsection{Appendix. Comparing the code paths}

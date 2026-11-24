@@ -14,6 +14,7 @@ from sir import OBSERVED_SEED, OBSERVED_THETA, simulate_visits, summarize
 
 PROJECT = Path(__file__).resolve().parent
 RESULTS = PROJECT / "results"
+TRAINING_BUDGETS = (2000, 10000, 36000)
 sys.path.insert(0, str(PROJECT.parent / "line-regressor"))
 from flow import ConditionalFlow
 
@@ -103,7 +104,28 @@ def train_model(model, theta, observations, n_train, validation_indices,
     return best_epoch, epoch
 
 
-def saved_summary_scores(saved, theta, summaries, test_indices):
+@torch.no_grad()
+def draw_test_posteriors(model, observations, indices):
+    """Draw one parameter pair for each held-out observation."""
+    model.eval()
+    generator = torch.Generator().manual_seed(811)
+    base_draws = torch.randn(len(indices), 2, generator=generator)
+    posterior = []
+    for batch, noise in zip(indices.split(512), base_draws.split(512)):
+        context = observations[batch]
+        flow = model
+        if isinstance(model, RawGridNPE):
+            context = model.encoder(context.float())
+            flow = model.flow
+        draws, _ = flow.to_parameters(noise, context)
+        posterior.append(draws)
+    draws = torch.cat(posterior)
+    if not ((draws >= 0) & (draws <= 1)).all():
+        raise RuntimeError("Test posterior draws must be finite and inside [0, 1].")
+    return draws.numpy()
+
+
+def saved_summary_scores(saved, theta, summaries, test_indices, test_draws=None):
     """Use the two flows already fitted by the notebook in the full comparison."""
     scores = {}
     parameter_counts = {}
@@ -118,11 +140,13 @@ def saved_summary_scores(saved, theta, summaries, test_indices):
             rtol=0, atol=5e-5,
         )
         parameter_counts[name] = sum(weight.numel() for weight in flow.parameters())
+        if test_draws is not None:
+            test_draws[name] = draw_test_posteriors(flow, summaries[:, :width], test_indices)
     return scores, parameter_counts
 
 
 def benchmark_direct(theta, maps, n_train, validation_indices, test_indices,
-                     batch_size, max_epochs, patience):
+                     batch_size, max_epochs, patience, test_draws=None):
     """Condition the flow on the 1,728 original binary values."""
     raw_inputs = maps.flatten(start_dim=1).float()
     torch.manual_seed(407)
@@ -136,6 +160,8 @@ def benchmark_direct(theta, maps, n_train, validation_indices, test_indices,
     scores = score_outbreaks(flow, theta, raw_inputs, test_indices)
     if not scores.isfinite().all():
         raise RuntimeError("Direct NPE produced a non-finite test score.")
+    if test_draws is not None:
+        test_draws["direct"] = draw_test_posteriors(flow, raw_inputs, test_indices)
 
     observed = simulate_visits(OBSERVED_THETA, np.random.default_rng(OBSERVED_SEED))
     observed_input = torch.from_numpy(observed).flatten(start_dim=1).float()
@@ -165,11 +191,20 @@ def save_results(metrics, filename):
     print(f"Saved {output.relative_to(PROJECT)}")
 
 
+def save_test_draws(test_draws, theta, indices, model_name, n_train):
+    output = RESULTS / f"test_draws_{model_name}_{n_train}.npz"
+    np.savez_compressed(output, theta=theta[indices].numpy(),
+                        test_indices=indices.numpy(), **test_draws)
+    print(f"Saved {output.relative_to(PROJECT)}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--training-outbreaks", type=int, choices=[2000, 36000], default=36000)
+    parser.add_argument("--training-outbreaks", type=int, choices=TRAINING_BUDGETS, default=36000)
     parser.add_argument("--model", choices=["cnn", "direct"], default="cnn",
                         help="Use a CNN encoder or pass the flattened maps to the flow.")
+    parser.add_argument("--save-test-draws", action="store_true",
+                        help="Save one posterior draw per test outbreak for C2ST and MMD.")
     args = parser.parse_args()
     n_train = args.training_outbreaks
     torch.set_num_threads(2)
@@ -179,6 +214,7 @@ def main():
     test_start = original_train_end + sizes["validation"]
     theta, maps, summaries = replay_outbreaks(sizes)
     test_indices = torch.arange(test_start, len(theta))
+    test_draws = {} if args.save_test_draws else None
 
     # Use the same early stopping and batch sizes as the runs in the report.
     if n_train == 36000:
@@ -191,24 +227,30 @@ def main():
     if args.model == "direct":
         metrics = benchmark_direct(
             theta, maps, n_train, validation_indices, test_indices,
-            batch_size, max_epochs, patience,
+            batch_size, max_epochs, patience, test_draws,
         )
         save_results(metrics, f"direct_comparison_{n_train}.json")
+        if test_draws is not None:
+            save_test_draws(test_draws, theta, test_indices, args.model, n_train)
         return
 
     if n_train == 36000:
-        scores, parameter_counts = saved_summary_scores(saved, theta, summaries, test_indices)
+        scores, parameter_counts = saved_summary_scores(saved, theta, summaries, test_indices, test_draws)
         filename = "raw_comparison.json"
     else:
         scores = {}
-        filename = "small_budget_comparison.json"
-        print("Training the counts-plus-overlaps model on 2,000 outbreaks.", flush=True)
-        torch.manual_seed(407)
-        summary_flow = ConditionalFlow(5, lower=(0.0, 0.0), upper=(1.0, 1.0))
-        summary_flow.fit_observation_standardization(summaries[:n_train])
-        train_model(summary_flow, theta, summaries, n_train, validation_indices,
-                    batch_size, max_epochs, patience)
-        scores["counts_overlap"] = score_outbreaks(summary_flow, theta, summaries, test_indices)
+        filename = "small_budget_comparison.json" if n_train == 2000 else "medium_budget_comparison.json"
+        for name, width in (("counts", 3), ("counts_overlap", 5)):
+            print(f"Training {name} on {n_train:,} outbreaks.", flush=True)
+            observations = summaries[:, :width]
+            torch.manual_seed(407)
+            summary_flow = ConditionalFlow(width, lower=(0.0, 0.0), upper=(1.0, 1.0))
+            summary_flow.fit_observation_standardization(observations[:n_train])
+            train_model(summary_flow, theta, observations, n_train, validation_indices,
+                        batch_size, max_epochs, patience)
+            scores[name] = score_outbreaks(summary_flow, theta, observations, test_indices)
+            if test_draws is not None:
+                test_draws[name] = draw_test_posteriors(summary_flow, observations, test_indices)
 
     print(f"Training the raw-map model on {n_train:,} outbreaks.", flush=True)
     torch.manual_seed(407)
@@ -216,6 +258,8 @@ def main():
     best_epoch, epochs_run = train_model(raw_model, theta, maps, n_train, validation_indices,
                                          batch_size, max_epochs, patience)
     scores["raw_grid"] = score_outbreaks(raw_model, theta, maps, test_indices)
+    if test_draws is not None:
+        test_draws["raw_grid"] = draw_test_posteriors(raw_model, maps, test_indices)
 
     # A positive difference favors the summary model on the same test cases.
     score_gap = scores["counts_overlap"] - scores["raw_grid"]
@@ -247,6 +291,8 @@ def main():
         metrics["train_outbreaks"] = n_train
 
     save_results(metrics, filename)
+    if test_draws is not None:
+        save_test_draws(test_draws, theta, test_indices, args.model, n_train)
 
 
 if __name__ == "__main__":

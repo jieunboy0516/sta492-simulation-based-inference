@@ -352,26 +352,132 @@ Condition on all eight observed maps $x^*$. Start each draw at $\theta_0=\eta\si
 
 # Research Direction II:<br>Summary Statistics {#summary-statistics}
 
-## From eight maps to eight counts {#counts .figure-slide}
+## Why use summary statistics? {#summary-why .figure-slide .summary-why-slide}
 
-<img class="talk-figure" src="figures/counts.svg" alt="Eight infectious maps at four-step visits and the infectious count under each.">
+$$x\in\mathcal X\subseteq\mathbb R^n,\qquad S:\mathcal X\to\mathbb R^d$$
 
-$$x \in \{0,1\}^{8\times24\times24}
-\quad\longmapsto\quad s(x)=(C_4,C_8,\ldots,C_{32}).$$
+::: {.summary-reasons}
+- **Dimension reduction.** $d<n$
+- **Bias and variance.**
+:::
 
-## Who stayed infectious? {#persistence .figure-slide}
+~~~{=html}
+<figure class="summary-bias-figure">
+<img src="figures/summary-bias-variance.svg" alt="Illustration at a fixed simulation budget. Squared bias decreases and variance increases as the number of summary statistics grows.">
+<figcaption>Illustrative curves for a fixed simulation budget.</figcaption>
+</figure>
+~~~
 
-<img class="talk-figure" src="figures/persistence-delay8.svg" alt="Five cells were infectious at step 12. Three of those same cells were still infectious at step 16. The outlines mark them on both maps.">
+## What makes a good summary? {#summary-good .figure-slide .summary-good-slide}
 
-$$\Pr(I_{t+4,j}=1\mid I_{t,j}=1,\theta_2)=(1-\theta_2)^4.$$
+$$q_\phi(\theta\mid S(x))\approx p(\theta\mid S(x))\approx p(\theta\mid x)$$
 
-## What does the summary keep? {#summary-posterior .figure-slide}
+- NPE learns the posterior given $S(x)$.
+- A good summary preserves the information about $\theta$ needed for inference.
+- If $S$ is sufficient, $p(\theta\mid S(x))=p(\theta\mid x)$.
 
-Keep the simulations whose summaries are closest to $s(x^*)$.
+## No summary statistics {#summary-construction .figure-slide .summary-method-slide}
 
-<img class="talk-figure" src="figures/summary-posteriors-delay8.svg" alt="Central 90 percent ABC intervals for recovery from the eight observed maps. The interval is 0.162 to 0.347 using counts and 0.169 to 0.311 when persistence is included.">
+~~~{=html}
+<div class="summary-architecture" style="--focus:#ad5d26">
+<div>
+<h3>Raw maps + direct NPE</h3>
+<p>Flatten the three maps into 1,728 inputs and pass them straight to the flow.</p>
+</div>
+<div>
+<div class="summary-npe-art">
+<img src="figures/dax-fig1-npe.png" alt="Dax et al. NPE architecture with the observation encoder crossed out. The raw entries go directly to the flow.">
+<svg viewBox="0 0 1287 642" aria-hidden="true">
+<rect x="468" y="112" width="311" height="405" rx="9" fill="#ad5d26" fill-opacity=".06" stroke="#ad5d26" stroke-width="6" stroke-dasharray="12 9"/>
+<path d="M 483 128 L 764 501 M 764 128 L 483 501" fill="none" stroke="#fff" stroke-width="17"/><path d="M 483 128 L 764 501 M 764 128 L 483 501" fill="none" stroke="#ad5d26" stroke-width="9"/>
+</svg>
+</div>
+<a href="https://arxiv.org/pdf/2305.17161#page=2">Dax et al. (2023), Fig. 1, NPE architecture</a>
+</div>
+</div>
+~~~
 
-Central 90% rejection-ABC intervals for the eight observed maps.
+## Hand-picked summaries {#summary-handpicked .figure-slide .summary-method-slide}
+
+Let $X=(X_4,X_8,X_{12})$ be the three infection maps.
+
+:::: {.summary-map-pair}
+::: {.summary-stat style="--focus:#596674"}
+### Counts only
+
+~~~{=html}
+<img src="figures/summary-counts-example.png" alt="The three maps at steps 4, 8, and 12 show 33, 60, and 86 infectious cells.">
+~~~
+
+$C_t$ counts infectious cells at visit $t$.
+
+$$
+\begin{aligned}
+S(X) &= (C_4,C_8,C_{12}) \\
+     &= (33,60,86).
+\end{aligned}
+$$
+:::
+::: {.summary-stat style="--focus:#176c61"}
+### Counts + overlaps
+
+~~~{=html}
+<img src="figures/summary-overlaps-example.png" alt="The overlay highlights the 17 cells infectious at both steps 4 and 8.">
+~~~
+
+$O_{t,u}$ counts cells infectious at both visits.
+
+$$
+\begin{aligned}
+S(X) &= (C_4,C_8,C_{12},O_{4,8},O_{8,12}) \\
+     &= (33,60,86,17,25).
+\end{aligned}
+$$
+:::
+::::
+
+## Learn end to end {#summary-end-to-end .figure-slide .summary-method-slide}
+
+~~~{=html}
+<div class="summary-architecture" style="--focus:#395a89">
+<div>
+<h3>Raw maps + CNN</h3>
+<p>Train the CNN encoder and the flow together. The CNN learns 16 features from the three maps.</p>
+</div>
+<div>
+<div class="summary-npe-art">
+<img src="figures/dax-fig1-npe.png" alt="Dax et al. NPE architecture with the observation encoder highlighted. The CNN learns the features used by the flow.">
+<svg viewBox="0 0 1287 642" aria-hidden="true">
+<rect x="468" y="112" width="311" height="405" rx="9" fill="#395a89" fill-opacity=".06" stroke="#395a89" stroke-width="6"/>
+
+</svg>
+</div>
+<a href="https://arxiv.org/pdf/2305.17161#page=2">Dax et al. (2023), Fig. 1, NPE architecture</a>
+</div>
+</div>
+~~~
+
+## Learn separately {#summary-learn-separately .figure-slide .summary-method-slide}
+
+~~~{=html}
+<figure class="summary-theorem">
+<img src="figures/chen-theorem-1.png" alt="Theorem 1. A deterministic summary is sufficient exactly when it maximizes sliced mutual information, which averages mutual information over uniform random projections of the parameters.">
+<a class="summary-theorem-source" href="https://proceedings.mlr.press/v202/chen23h/chen23h.pdf#page=3">Chen, Gutmann, and Weller (2023), Theorem 1</a>
+</figure>
+~~~
+
+## SIR example {#summary-benchmark .figure-slide .summary-result-slide}
+
+~~~{=html}
+<p class="summary-result-subtitle">Three visits with immediate onset · Closer to 50% (chance) is better</p>
+<img class="summary-result-chart" src="figures/summary-c2st.png" alt="C2ST accuracy at 2,000, 10,000, and 36,000 training outbreaks. Counts only: 72.0%, 69.9%, and 68.7%. Counts plus overlaps: 59.2%, 57.4%, and 55.9%. Raw maps with CNN: 54.3%, 53.0%, and 50.7%. Raw maps with direct NPE: 61.5%, 53.7%, and 52.1%. The dashed line marks 50% chance accuracy.">
+<div class="summary-result-key">
+<div style="--focus:#596674"><strong>Counts only</strong>3 counts</div>
+<div style="--focus:#176c61"><strong>Counts + overlaps</strong>5 summary statistics</div>
+<div style="--focus:#395a89"><strong>CNN</strong>16 learned features</div>
+<div style="--focus:#ad5d26"><strong>Direct NPE</strong>1,728 raw entries</div>
+</div>
+~~~
 
 # Research Direction III:<br>Model Misspecification {#misspecification}
 
