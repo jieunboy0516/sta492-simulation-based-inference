@@ -154,13 +154,9 @@ When the simulator exposes the probabilities of its internal transitions, its jo
 
 Inference compilation uses recorded simulation paths to learn a proposal for each successive random choice given the observations and previous choices. Importance sampling then weights the proposed paths. [Le et al. (2017)](https://proceedings.mlr.press/v54/le17a.html)
 
-## 35. Conclusion
+## Thank you
 
-Return to the opening problem. A posterior about transmission and recovery is meaningful only in relation to the simulator, what the visits measured and what the estimator retained.
-
-## 36. What determines the posterior?
-
-An eight-step delay in the data-generating process changed what the immediate-onset estimators inferred. Keeping cell persistence sharpened recovery inference. Repeated outbreaks made the cost of misspecification visible. NPE-PFN offers another way to use simulated pairs; choosing a model, preserving information and checking uncertainty still require scientific judgment.
+Special thanks to Yichen Ji and Prof. Ricardo Baptista.
 
 ### Reproduction and provenance
 

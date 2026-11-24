@@ -417,9 +417,9 @@ Let $X=(X_4,X_8,X_{12})$ be the three infection maps.
 
 :::: {.summary-map-pair}
 ::: {.summary-stat style="--focus:#596674"}
-### Counts only
 
 ~~~{=html}
+<h3>Counts only</h3>
 <img src="figures/summary-counts-example.png" alt="The three maps at steps 4, 8, and 12 show 33, 60, and 86 infectious cells.">
 ~~~
 
@@ -433,9 +433,9 @@ S(X) &= (C_4,C_8,C_{12}) \\
 $$
 :::
 ::: {.summary-stat style="--focus:#176c61"}
-### Counts + overlaps
 
 ~~~{=html}
+<h3>Counts + overlaps</h3>
 <img src="figures/summary-overlaps-example.png" alt="The overlay highlights the 17 cells infectious at both steps 4 and 8.">
 ~~~
 
@@ -559,7 +559,7 @@ For each delay, how often does the fitted region contain the transmission and re
 
 **Discrepancy models** specify how an observation can differ from the simulator output. [Ward et al. (2022)](https://papers.neurips.cc/paper_files/paper/2022/hash/db0eac6747e3631eb91095cd76065611-Abstract-Conference.html){.flow-source}
 
-Does **posterior contraction** still occur under model misspecification, and if so, what does it look like? [Frazier et al. (2020)](https://doi.org/10.1111/rssb.12356){.flow-source}
+Does **posterior contraction** still occur under model misspecification, and if so, what does it look like? [Gelman and Shalizi (2013)](https://sites.stat.columbia.edu/gelman/research/published/philosophy.pdf){.flow-source}
 
 # New advances {#new-advances}
 
@@ -577,14 +577,6 @@ Using the internal states $z$ of the simulator to improve inference
 
 **Inference compilation** learns from simulated paths to propose hidden states consistent with the observation. [Le et al. (2017)](https://proceedings.mlr.press/v54/le17a.html){.flow-source}
 
-# Conclusion
+# Thank you {#thank-you}
 
-## What determines the posterior? {#takeaways .figure-slide}
-
-**The simulator** sets the family of possible observations.
-
-**The summary** determines which evidence reaches the estimator.
-
-**Coverage** measures how often a reported region contains the generating parameter pair.
-
-NPE-PFN changes how we learn from simulations. These checks still apply.
+Special thanks to Yichen Ji and Prof. Ricardo Baptista
