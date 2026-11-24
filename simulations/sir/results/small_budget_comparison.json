@@ -1,0 +1,10 @@
+{
+  "train_outbreaks": 2000,
+  "test_outbreaks": 4000,
+  "mean_test_log_density": {
+    "counts_overlap": 2.6469321250915527,
+    "raw_grid": 2.9960062503814697
+  },
+  "summary_vs_raw_log_density_gain": -0.34907451272010803,
+  "summary_vs_raw_paired_standard_error": 0.02217794954776764
+}

@@ -1,0 +1,41 @@
+{
+  "test_outbreaks": 4000,
+  "raw_best_validation_epoch": 38,
+  "raw_epochs_run": 48,
+  "total_trainable_parameters": {
+    "counts": 27660,
+    "counts_overlap": 28428,
+    "raw_grid": 50712
+  },
+  "mean_test_log_density": {
+    "counts": 2.20881724357605,
+    "counts_overlap": 2.9106340408325195,
+    "raw_grid": 3.3841981887817383
+  },
+  "posterior_means": {
+    "counts": [
+      0.8740095496177673,
+      0.4887012243270874
+    ],
+    "counts_overlap": [
+      0.421976238489151,
+      0.1810917854309082
+    ],
+    "raw_grid": [
+      0.44020360708236694,
+      0.18510101735591888
+    ]
+  },
+  "raw_observed_marginal_90_intervals": [
+    [
+      0.377578367292881,
+      0.507418218255043
+    ],
+    [
+      0.1518189564347267,
+      0.22136510163545609
+    ]
+  ],
+  "summary_vs_raw_log_density_gain": -0.47356390953063965,
+  "summary_vs_raw_paired_standard_error": 0.014851045794785023
+}
