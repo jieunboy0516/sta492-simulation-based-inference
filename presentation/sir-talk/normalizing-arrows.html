@@ -1,0 +1,37 @@
+<svg class="nf-links" aria-hidden="true">
+  <defs>
+    <marker id="nf-tip-blue" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#33658A"/></marker>
+    <marker id="nf-tip-red" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#C44E28"/></marker>
+  </defs>
+  <path data-link="inverse" stroke="#33658A" marker-end="url(#nf-tip-blue)"/>
+  <path data-link="jacobian" stroke="#C44E28" marker-end="url(#nf-tip-red)"/>
+</svg>
+<script>
+(() => {
+  const root = document.querySelector('.nf-derivation');
+  const svg = root.querySelector('svg');
+  function draw() {
+    const r = svg.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const scale = root.offsetWidth / r.width;
+    svg.setAttribute('viewBox', '0 0 ' + root.offsetWidth + ' ' + root.offsetHeight);
+    for (const link of svg.querySelectorAll('[data-link]')) {
+      const key = link.dataset.link;
+      const a = root.querySelector('[data-word="'+key+'"]').getBoundingClientRect();
+      const b = root.querySelector('[data-term="'+key+'"]').getBoundingClientRect();
+      const x1 = (a.left + a.width/2 - r.left)*scale;
+      const x2 = (b.left + b.width/2 - r.left)*scale;
+      const y1 = (a.bottom - r.top)*scale + 2;
+      const y2 = (b.top - r.top)*scale - 3;
+      const mid = (y1 + y2)/2;
+      link.setAttribute('d', 'M '+x1+' '+y1+' C '+x1+' '+mid+' '+x2+' '+mid+' '+x2+' '+y2);
+    }
+  }
+  const redraw = () => requestAnimationFrame(draw);
+  new ResizeObserver(redraw).observe(root);
+  new MutationObserver(redraw).observe(root.closest('section'), {subtree:true,attributes:true,attributeFilter:['class']});
+  document.fonts.addEventListener('loadingdone', redraw);
+  window.addEventListener('resize', redraw);
+  window.addEventListener('load', redraw);
+})();
+</script>

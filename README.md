@@ -77,5 +77,6 @@ export PATH="/Library/TeX/texbin:$PATH"
 
 ## Report draft and presentation slides
 
+- Interactive SIR talk with the outbreak simulator and flow-matching animation. [Open the downloaded deck](presentation/sir-talk/slides.html) · [Quarto source](presentation/sir-talk/slides.qmd) · [Speaker notes](presentation/sir-talk/speaker-notes.md)
 - [Report draft (Google Docs)](https://docs.google.com/document/d/1-2sz6M0IZ_1TCE7WXlljw7BMHPN3UOZlgvDi-0xLGdE/edit?usp=sharing)
 - [Presentation slides (Google Slides)](https://docs.google.com/presentation/d/1UMGA1gGIlv03YM7jHCzXXs9Cm_lsRJMi1Lr9iYceKZc/edit?slide=id.p#slide=id.p)
