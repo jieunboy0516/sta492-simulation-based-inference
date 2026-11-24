@@ -10,11 +10,25 @@ a placeholder until it is finalized.
 
 ## References
 
+### Overview and teaching
+
 1. Michael Deistler et al. (2025). [Simulation-Based Inference: A Practical Guide](https://arxiv.org/abs/2508.12939). arXiv:2508.12939.
 2. Kyle Cranmer, Johann Brehmer, and Gilles Louppe (2019). [The frontier of simulation-based inference](https://arxiv.org/abs/1911.01429). arXiv:1911.01429.
 3. Christoph Weniger (2026). [Lecture 1: ABC and Neural SBI](https://cweniger.github.io/teaching-2608-IAIFI/lecture1.html). IAIFI PhD School, University of Amsterdam.
 
 The lecture provides interactive teaching examples alongside the research papers.
+
+### Representation learning and summary statistics
+
+1. Yanzhi Chen, Michael U. Gutmann, and Adrian Weller (2023). [Is Learning Summary Statistics Necessary for Likelihood-free Inference?](https://proceedings.mlr.press/v202/chen23h/chen23h.pdf). ICML 2023, PMLR 202:4529-4544.
+2. Yanzhi Chen, Dinghuai Zhang, Michael U. Gutmann, Aaron Courville, and Zhanxing Zhu (2021). [Neural Approximate Sufficient Statistics for Implicit Models](https://arxiv.org/pdf/2010.10079). ICLR 2021. arXiv:2010.10079.
+3. Till Hoffmann and Jukka-Pekka Onnela (2022). [Unifying Summary Statistic Selection for Approximate Bayesian Computation](https://arxiv.org/pdf/2206.02340). arXiv:2206.02340.
+
+Related publication list: [Google Scholar profile](https://scholar.google.com/citations?user=W5sSgIsAAAAJ&hl=en).
+
+### Robust SBI and summary statistics
+
+1. Daolang Huang, Ayush Bharti, Amauri Souza, Luigi Acerbi, and Samuel Kaski (2023). [Learning Robust Statistics for Simulation-based Inference under Model Misspecification](https://arxiv.org/pdf/2305.15871). NeurIPS 2023. arXiv:2305.15871.
 
 ## Simulation examples
 

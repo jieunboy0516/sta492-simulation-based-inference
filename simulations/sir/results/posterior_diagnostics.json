@@ -1,0 +1,75 @@
+{
+  "test_outbreaks": 4000,
+  "c2st_classifier_training_outbreaks": 2000,
+  "c2st_classifier_test_outbreaks": 2000,
+  "map_bandwidth_squared": 170.0,
+  "parameter_bandwidth_squared": 0.2680019736289978,
+  "budgets": {
+    "2000": {
+      "counts": {
+        "c2st_accuracy": 0.72025,
+        "c2st_se": 0.006861560263863265,
+        "mmd_squared": 0.001891033018350253
+      },
+      "counts_overlap": {
+        "c2st_accuracy": 0.59175,
+        "c2st_se": 0.007441851875015037,
+        "mmd_squared": 0.00029122138323890777
+      },
+      "raw_grid": {
+        "c2st_accuracy": 0.54325,
+        "c2st_se": 0.007418202856272426,
+        "mmd_squared": 0.00014446521770003596
+      },
+      "direct": {
+        "c2st_accuracy": 0.61525,
+        "c2st_se": 0.007412738569283843,
+        "mmd_squared": 0.003712590996041748
+      }
+    },
+    "10000": {
+      "counts": {
+        "c2st_accuracy": 0.69875,
+        "c2st_se": 0.007041769096328207,
+        "mmd_squared": 0.0010476919013986349
+      },
+      "counts_overlap": {
+        "c2st_accuracy": 0.57375,
+        "c2st_se": 0.007508072610674698,
+        "mmd_squared": 0.00022536452109355305
+      },
+      "raw_grid": {
+        "c2st_accuracy": 0.5305,
+        "c2st_se": 0.007545750073523907,
+        "mmd_squared": 1.1461363844734842e-05
+      },
+      "direct": {
+        "c2st_accuracy": 0.53675,
+        "c2st_se": 0.007452515598398449,
+        "mmd_squared": 0.000256381536142457
+      }
+    },
+    "36000": {
+      "counts": {
+        "c2st_accuracy": 0.68725,
+        "c2st_se": 0.0071278764061276,
+        "mmd_squared": 0.0009809385318526507
+      },
+      "counts_overlap": {
+        "c2st_accuracy": 0.55925,
+        "c2st_se": 0.007447143662127258,
+        "mmd_squared": 0.00017373709348657133
+      },
+      "raw_grid": {
+        "c2st_accuracy": 0.50675,
+        "c2st_se": 0.0075045238149295266,
+        "mmd_squared": 3.531898230263895e-05
+      },
+      "direct": {
+        "c2st_accuracy": 0.5215,
+        "c2st_se": 0.007274636428549799,
+        "mmd_squared": 0.00010698968887468515
+      }
+    }
+  }
+}

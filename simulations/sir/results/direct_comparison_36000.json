@@ -1,0 +1,24 @@
+{
+  "train_outbreaks": 36000,
+  "validation_outbreaks": 4000,
+  "test_outbreaks": 4000,
+  "observation_size": 1728,
+  "best_validation_epoch": 16,
+  "epochs_run": 26,
+  "trainable_weights": 690060,
+  "mean_test_log_density": 3.128776788711548,
+  "posterior_mean": [
+    0.4268791973590851,
+    0.1905640810728073
+  ],
+  "posterior_marginal_90_interval": [
+    [
+      0.3778453186154366,
+      0.4772785648703575
+    ],
+    [
+      0.16960013806819915,
+      0.2124134786427021
+    ]
+  ]
+}

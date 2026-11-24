@@ -128,3 +128,62 @@
 .reveal #biased-posterior .posterior-view img { margin-top:.25em; max-height:635px; }
 .reveal #posterior-detail:checked ~ .posterior-full,
 .reveal #posterior-full:checked ~ .posterior-detail { display:none; }
+
+/* Summary statistics slides */
+.reveal :is(.summary-why-slide, .summary-good-slide) .katex-display {
+  margin:.62em 0;
+}
+.reveal .summary-reasons ul {
+  display:block; width:min(100%,850px); margin:1em auto .25em;
+  text-align:left; padding-left:1em;
+}
+.reveal .figure-slide figure.summary-bias-figure { width:min(100%,850px); margin:0 auto; }
+.reveal .figure-slide figure.summary-bias-figure img { display:block; width:100%; margin:0 auto; }
+.reveal .figure-slide figure.summary-bias-figure figcaption {
+  display:block; margin-top:.3em; font-size:.62em; color:#505050;
+}
+.reveal .summary-architecture {
+  display:grid; grid-template-columns: .7fr 1.15fr; gap:2em;
+  align-items:center; margin:1.8em auto 0; max-width:1080px; text-align:left;
+}
+.reveal .summary-architecture h3, .reveal .summary-stat h3 {
+  color:var(--focus); font-size:.95em; font-weight:700; margin:0;
+}
+.reveal .summary-architecture p { font-size:.88em; max-width:none; margin:.4em 0 0; }
+.reveal .summary-npe-art { position:relative; overflow:hidden; }
+.reveal .summary-npe-art img {
+  display:block; width:165%; max-width:none; max-height:none; height:auto; margin:0;
+}
+.reveal .summary-npe-art svg {
+  position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+}
+.reveal .summary-architecture a, .reveal .summary-theorem-source {
+  display:block; margin-top:.38em; font-size:.57em; color:#505050;
+  text-decoration:underline; text-underline-offset:.12em;
+}
+.reveal .summary-map-pair {
+  display:grid; grid-template-columns:1fr 1fr; gap:1.12em;
+  margin:1.1em auto 0; max-width:1080px; text-align:left;
+}
+.reveal .summary-stat { font-size:.84em; }
+.reveal .summary-stat img {
+  display:block; width:100%; height:210px; object-fit:contain; margin:.35em 0;
+}
+.reveal .summary-stat p { margin:.3em 0 0; line-height:1.2; }
+.reveal .summary-stat .katex-display { margin:.5em 0 0; }
+.reveal .summary-stat .katex-display > .katex { text-align:left; }
+.reveal .figure-slide figure.summary-theorem { width:min(100%,955px); margin:.5em auto 0; }
+.reveal .summary-theorem img { display:block; width:100%; height:auto; margin:0; }
+.reveal .summary-theorem-source { text-align:left; }
+.reveal .summary-result-slide h2 { margin-bottom:.22em; }
+.reveal .summary-result-slide .summary-result-subtitle {
+  max-width:none; font-size:.70em; color:#505050; margin:0 auto .4em;
+}
+.reveal .summary-result-chart {
+  display:block; width:min(100%,960px); height:auto; margin:0 auto;
+}
+.reveal .summary-result-key {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:.5em;
+  max-width:1000px; margin:.72em auto 0; font-size:.70em;
+}
+.reveal .summary-result-key strong { display:block; color:var(--focus); }
