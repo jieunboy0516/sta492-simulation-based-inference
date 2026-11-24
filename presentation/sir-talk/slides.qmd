@@ -103,7 +103,7 @@ If $u < \min(1,r)$, set $\theta \leftarrow \theta'$.
 ### Simulation-based inference
 
 ::: {.case-intro}
-Assume we can sample from the prior and the simulator, even when the likelihood is intractable.
+Assume we can sample from the prior and the simulator, even when the **likelihood is intractable**.
 :::
 
 ::: {.example-prior}
@@ -164,13 +164,13 @@ Per time step
     <label for="sir-time">Step <output id="sir-clock" for="sir-time">8</output></label>
     <input id="sir-time" type="range" min="0" max="32" step="1" value="8">
   </div>
-  <div class="sir-legend"><span>One person per cell</span><span class="sir-key susceptible">Susceptible</span><span class="sir-key exposed">Exposed (8 steps)</span><span class="sir-key infectious">Infectious</span><span class="sir-key recovered">Recovered</span></div>
+  <div class="sir-legend"><span>One person per cell</span><span class="sir-key susceptible">Susceptible</span><span class="sir-key infectious">Infectious</span><span class="sir-key recovered">Recovered</span></div>
 </div>
 ~~~
 
 ## Real-world observations {#sir-observations .epi-slide}
 
-Our “real-world” observation $x^*$ is one simulated outbreak at $\theta\approx(0.499,0.265)$. Here are the first three of eight visits.
+We observe the SIR outbreak $x^*$ simulated at $\theta\approx(0.499,0.265)$. Here are the first three of eight visits.
 
 ~~~{=html}
 <div class="sir-snapshots">
@@ -208,7 +208,7 @@ $q_\phi(x\mid\theta)$
 :::
 
 ::: {.fragment .training-loss fragment-index="1"}
-Train by minimizing $\mathcal L_{\mathrm{NLE}}(\phi)=\mathbb E[-\log q_\phi(x\mid\theta)]$
+Train by minimizing $\mathcal L_{\mathrm{NLE}}(\phi)=\mathbb E_{(x,\theta)\sim p(x,\theta)}\!\left[-\log q_\phi(x\mid\theta)\right]$
 :::
 
 ::: {.fragment fragment-index="2"}
@@ -235,18 +235,20 @@ Parameterize the conditional density $q$ with a neural network $q_\phi$.
 :::
 
 ::: {.training-loss}
-Train by minimizing [[$\mathcal L_{\mathrm{NLE}}(\phi)=\mathbb E[-\log q_\phi(x\mid\theta)]$]{.fragment .fade-out fragment-index="0"} [$\mathcal L_{\mathrm{NPE}}(\phi)=\mathbb E[-\log q_\phi(\theta\mid x)]$]{.fragment fragment-index="0"}]{.r-stack}
+Train by minimizing [[$\mathcal L_{\mathrm{NLE}}(\phi)=\mathbb E_{(x,\theta)\sim p(x,\theta)}\!\left[-\log q_\phi(x\mid\theta)\right]$]{.fragment .fade-out fragment-index="0"} [$\mathcal L_{\mathrm{NPE}}(\phi)=\mathbb E_{(x,\theta)\sim p(x,\theta)}\!\left[-\log q_\phi(\theta\mid x)\right]$]{.fragment fragment-index="0"}]{.r-stack}
 :::
 
 ::: {.fragment fragment-index="1"}
-Use $q_\phi$ as the posterior.
+Use $q_\phi$ as the approximated posterior.
 :::
 
 ## Transport maps {#transport-maps .figure-slide .transport-slide}
 
 For every $x$, draw $\eta \sim \mathcal N(0,I)$ and transform it into
 
-$$\theta = T_\phi(\eta; x) \sim q_\phi(\theta \mid x).$$
+$$\theta = T_\phi(\eta; x) \sim q_\phi(\theta \mid x) \approx p(\theta \mid x).$$
+
+The heatmap uses a second outbreak with an eight-step delay before infectiousness.
 
 <img class="talk-figure" src="figures/transport.svg" alt="Two density heatmaps. The standard Gaussian is centered at zero. The fitted SIR posterior shows transmission and recovery probabilities for the observed outbreak. Yellow marks the highest density in each panel.">
 
@@ -269,7 +271,7 @@ $q_\phi(\theta \mid x) = \mathcal N\!\bigl($[$T_\phi^{-1}(\theta; x)$]{.nf-inver
 :::
 
 ::: {.fragment .flow-takeaway}
-**This architecture is limiting.**
+**Normalizing flows put a lot of constraints on the architecture of the network.**
 :::
 
 ::: {.fragment}
@@ -293,22 +295,20 @@ $$\mathcal L_{\mathrm{FM}}(v)
 
 Flow matching imposes no special architectural constraints on the neural network that parameterizes $v_{t,x}$.
 
-<!-- Temporarily omitted from the talk.
 ## Score matching {#score-matching .figure-slide .transport-slide}
 
-Perturb $\theta$ to $\theta_t=\alpha_t\theta+\sigma_t\eta$, with $\eta\sim\mathcal N(0,I)$. Learn the noisy posterior score $s_{t,x}(\theta_t)\approx\nabla_{\theta_t}\log p_t(\theta_t\mid x)$ by minimizing
+Add noise to the simulated parameters. Learn the noisy posterior score $s_{t,x}(\theta_t)\approx\nabla_{\theta_t}\log p_t(\theta_t\mid x)$ by minimizing
 
 $$\mathcal L_{\mathrm{SM}}(s)
-=\mathbb E_{\theta,x,\eta,t}\!\left[\left\|\sigma_t\,s_{t,x}(\theta_t)+\eta\right\|^2\right].$$
+=\mathbb E_{\theta_0,x,t,\theta_t}\!\left[\left\|s_{t,x}(\theta_t)-\nabla_{\theta_t}\log p_t(\theta_t\mid\theta_0)\right\|^2\right].$$
 
 ::: {.flow-paper-panel}
-<img src="figures/sharrock-fig1-npse.png" alt="In the two-moons example, adding noise turns the two posterior crescents into a Gaussian cloud. The learned score guides the reverse process back to the crescent-shaped posterior.">
+<img src="figures/sharrock-fig1-npse.png" alt="Two-moons example. The forward SDE adds noise to the parameters. The reverse SDE uses the conditional score to turn Gaussian noise into posterior draws.">
 
-[Sharrock et al. (2024), Fig. 1, two-moons example](https://proceedings.mlr.press/v235/sharrock24a.html)
+[Sharrock et al. (2024), Fig. 1](https://proceedings.mlr.press/v235/sharrock24a.html)
 :::
 
-At $x^*$, start from Gaussian noise and use the learned score to run the diffusion backward for a posterior draw.
--->
+For fixed $x$, start from Gaussian noise at $t=T$. Use the learned score to run the diffusion back to $t=0$ for an approximate posterior draw.
 
 ## Sampling and density evaluation {#flow-sampling-density .figure-slide .transport-slide}
 
@@ -350,6 +350,20 @@ Condition on all eight observed maps $x^*$. Start each draw at $\theta_0=\eta\si
 
 {{< include flow-player.html >}}
 
+## {#cosine-posterior .figure-slide .transport-slide data-menu-title="Cosine posterior comparison"}
+
+<img class="talk-figure" src="figures/cosine-posterior-comparison.png" alt="Cosine example at y = 0. The conditional diffusion samples follow the diagonal bands of the true posterior more closely than the conditional normalizing flow samples.">
+
+[Chen, Bansal and Scott (2024), Fig. 1](https://arxiv.org/pdf/2410.19105){.flow-source}
+
+## Recent advances {#recent-advances .figure-slide .transport-slide}
+
+**Compositional score modeling** combines scores from conditionally independent observations to sample a shared posterior. [Geffner et al. (2023)](https://proceedings.mlr.press/v202/geffner23a.html){.flow-source}
+
+**Consistency models** generate a posterior draw in one or a few network evaluations. [Schmitt et al. (2024)](https://proceedings.neurips.cc/paper_files/paper/2024/hash/e58026e2b2929108e1bd24cbfa1c8e4b-Abstract-Conference.html){.flow-source}
+
+**Flow matching calibration** uses a small set of observations with known parameters to correct posterior estimates under simulator misspecification. [Ruhlmann et al. (2026)](https://proceedings.mlr.press/v306/ruhlmann26a.html){.flow-source}
+
 # Research Direction II:<br>Summary Statistics {#summary-statistics}
 
 ## From eight maps to eight counts {#counts .figure-slide}
@@ -383,24 +397,20 @@ $$\varepsilon = \inf_{\theta\in\Theta}D\!\left[p_0(x):p(x\mid\theta)\right]>0$$
 
 ## Introducing misspecification to SIR {#delayed-onset .figure-slide}
 
-::: {.mechanisms}
-Misspecified simulator
+~~~{=html}
+<div class="mechanisms">
+  <strong>Assumed simulator</strong>
+  <div class="mechanism-chain">S<span class="transition-arrow">⟶</span>I<span class="transition-arrow">⟶</span>R</div>
+  <div class="mechanism-relation"><span class="matched">=</span><span class="misspecified">≠</span></div>
+  <strong>Data-generating process</strong>
+  <div class="mechanism-chain">S<span class="transition-arrow">⟶</span><span class="fragment exposure-insert"><span class="exposed-state">E<small>eight steps</small></span><span class="transition-arrow">⟶</span></span>I<span class="transition-arrow">⟶</span>R</div>
+</div>
+~~~
 
-$\mathrm S \longrightarrow \mathrm I \longrightarrow \mathrm R$
-
-Data-generating process
-
-$\mathrm S \longrightarrow \underset{\text{eight steps}}{\mathrm E} \longrightarrow \mathrm I \longrightarrow \mathrm R$
-:::
-
-## Simulating delayed infectiousness {#delayed-simulator .epi-slide}
+## Simulating a four-step delay {#delayed-simulator .epi-slide}
 
 ~~~{=html}
-<div class="onset-control">
-  <label for="delay-onset">Delay before infectiousness</label>
-  <select id="delay-onset"><option value="8" selected>8 steps</option><option value="0">Immediate onset</option></select>
-</div>
-<div class="sir-maps" role="group" aria-label="Outbreak simulation with selectable delay">
+<div class="sir-maps" role="group" aria-label="Outbreak simulation with a four-step exposed period">
   <div class="sir-map-pair">
     <figure><figcaption id="delay-state-caption">Simulated states</figcaption><canvas id="delay-states" role="img"></canvas></figure>
     <figure><figcaption id="delay-visit-caption">Last simulated visit</figcaption><canvas id="delay-visit" role="img"></canvas></figure>
@@ -409,7 +419,7 @@ $\mathrm S \longrightarrow \underset{\text{eight steps}}{\mathrm E} \longrightar
     <button type="button" id="delay-play">Play</button>
     <button type="button" id="delay-reset">Reset</button>
     <label for="delay-time">Step <output id="delay-clock" for="delay-time">8</output></label>
-    <input id="delay-time" type="range" min="0" max="32" step="1" value="8">
+    <input id="delay-time" type="range" min="0" max="16" step="1" value="8">
   </div>
   <div class="sir-legend"><span>One person per cell</span><span class="sir-key susceptible">Susceptible</span><span class="sir-key exposed">Exposed</span><span class="sir-key infectious">Infectious</span><span class="sir-key recovered">Recovered</span></div>
 </div>
@@ -419,40 +429,47 @@ $\mathrm S \longrightarrow \underset{\text{eight steps}}{\mathrm E} \longrightar
 
 ## The effect of misspecification {#biased-posterior .figure-slide}
 
-<img class="talk-figure" src="figures/misspecification-posteriors.svg" alt="Six heatmaps of joint log posterior density for transmission and recovery. The rows are well-specified and misspecified. Both use the same MCMC reference. The solid and dashed contours enclose 50% and 90% posterior mass.">
+~~~{=html}
+<fieldset class="posterior-view">
+  <legend>Parameter range</legend>
+  <input id="posterior-detail" name="posterior-range" type="radio" checked><label for="posterior-detail">Zoomed</label>
+  <input id="posterior-full" name="posterior-range" type="radio"><label for="posterior-full">Full square</label>
+  <img class="talk-figure posterior-detail" src="figures/misspecification-visits-9-10-detail.png" alt="Six posteriors on shared axes for visits at steps 9 and 10. Under immediate onset, all three means are near the generating pair. On the eight-step-delay maps, mean transmission is 0.52 under the generating model and about 0.11 for both neural estimators.">
+  <img class="talk-figure posterior-full" src="figures/misspecification-visits-9-10-full.png" alt="The same six posterior densities shown over the full unit square.">
+</fieldset>
+~~~
 
-## Joint highest posterior density regions {#coverage .figure-slide}
+## Coverage under delayed onset {#coverage .figure-slide}
 
-<img class="talk-figure" src="figures/coverage-joint-hpd-delay8.svg" alt="Joint HPD coverage for transmission and recovery across 192 held-out eight-step-delay outbreaks. Both NPE curves fall below the calibration diagonal. The immediate-onset fit has lower coverage at every plotted level.">
+For each delay, how often does the fitted region contain the transmission and recovery rates that generated the step-12 map?
 
-The 90% region contained the true $(\theta_1,\theta_2)$ in **153/192** outbreaks with matched training and **48/192** with immediate-onset training.
+<img class="talk-figure" src="figures/coverage-step12-generating.svg" alt="Joint HPD coverage for immediate-onset spline NPE and flow matching. Each point counts the fraction of 192 generating parameter pairs inside the fitted regions at the indicated test delay.">
 
-## Dealing with model misspecification {#dealing-with-misspecification .figure-slide}
+## Dealing with model misspecification {#dealing-with-misspecification .figure-slide .transport-slide}
 
-1. Average independently trained posterior estimates.\
-   [Cannon et al. (2022)](https://arxiv.org/pdf/2209.01845#page=6)
-2. Learn robust summary statistics through regularization.\
-   [Huang et al. (2023)](https://proceedings.neurips.cc/paper_files/paper/2023/file/16c5b4102a6b6eb061e502ce6736ad8a-Paper-Conference.pdf)
-3. Model the simulator discrepancy explicitly.\
-   [Ward et al. (2022)](https://papers.neurips.cc/paper_files/paper/2022/hash/db0eac6747e3631eb91095cd76065611-Abstract-Conference.html)
+**Posterior ensembles** average the posterior densities from independently trained networks. [Cannon et al. (2022)](https://arxiv.org/pdf/2209.01845#page=6){.flow-source}
 
-# Research Direction IV:<br>New advances {#new-advances}
+**Regularized summaries** retain information about the parameters while penalizing differences between simulated and observed summaries. [Huang et al. (2023)](https://proceedings.neurips.cc/paper_files/paper/2023/file/16c5b4102a6b6eb061e502ce6736ad8a-Paper-Conference.pdf){.flow-source}
 
-## NPE-PFN {#npe-pfn .figure-slide}
+**Discrepancy models** specify how an observation can differ from the simulator output. [Ward et al. (2022)](https://papers.neurips.cc/paper_files/paper/2022/hash/db0eac6747e3631eb91095cd76065611-Abstract-Conference.html){.flow-source}
 
-::: {.talk-chain}
-Simulated pairs + $x^*$
+Does **posterior contraction** still occur under model misspecification, and if so, what does it look like? [Frazier et al. (2020)](https://doi.org/10.1111/rssb.12356){.flow-source}
 
-$\downarrow$
+# New advances {#new-advances}
 
-Pretrained tabular model
+## Research Direction IV:<br>Scalable and flexible SBI {#npe-pfn .figure-slide .transport-slide}
 
-$\downarrow$
+**All-in-one SBI** trains one network to sample parameters given data or data given parameters. [Gloeckler et al. (2024)](https://proceedings.mlr.press/v235/gloeckler24a.html){.flow-source}
 
-Posterior draws
-:::
+**NPE-PFN** uses simulated $(\theta,x)$ pairs as context for a pretrained tabular model to estimate the posterior at $x^*$. [Vetter et al. (2025)](https://papers.nips.cc/paper_files/paper/2025/hash/770cabd044c4eacb6dc5924d9a686dce-Abstract-Conference.html){.flow-source}
 
-[Vetter et al., NeurIPS 2025](https://papers.nips.cc/paper_files/paper/2025/hash/770cabd044c4eacb6dc5924d9a686dce-Abstract-Conference.html)
+## Research Direction V:<br>Simulator transparency {#simulator-transparency .figure-slide .transport-slide}
+
+Using the internal states $z$ of the simulator to improve inference
+
+**Mining gold** uses the joint score of $(x,z)$ to train a likelihood estimator. [Brehmer et al. (2020)](https://pmc.ncbi.nlm.nih.gov/articles/PMC7071889/){.flow-source}
+
+**Inference compilation** learns from simulated paths to propose hidden states consistent with the observation. [Le et al. (2017)](https://proceedings.mlr.press/v54/le17a.html){.flow-source}
 
 # Conclusion
 
@@ -462,6 +479,6 @@ Posterior draws
 
 **The summary** determines which evidence reaches the estimator.
 
-**Coverage** asks how often a credible region contains the generating parameter pair.
+**Coverage** measures how often a reported region contains the generating parameter pair.
 
 NPE-PFN changes how we learn from simulations. These checks still apply.

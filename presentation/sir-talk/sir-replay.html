@@ -27,9 +27,9 @@
   }
 
   const draws = replayDraws();
-  function simulate(p, q, latentSteps = data.latentSteps) {
+  function simulateSIR(p, q, exposedSteps = 0) {
+    const infectiousAt = new Uint16Array(area);
     const movie = new Uint8Array((lastStep + 1) * area);
-    const exposureRemaining = new Uint8Array(area);
     movie.set(recordedFrames.subarray(0, area)); // Shared initial condition
     const hazard = Array.from({length: 5}, (_, k) => 1 - (1 - p) ** k);
     for (let t = 0; t < lastStep; t++) {
@@ -44,13 +44,13 @@
             + Number(col < side-1 && previous[i+1] === 1)
             + Number(previous[i-side] === 1) + Number(previous[i+side] === 1);
           if (draws[drawOffset + i] < hazard[neighbors]) {
-            state = latentSteps > 0 ? 3 : 1;
-            exposureRemaining[i] = latentSteps;
+            state = exposedSteps ? 3 : 1;
+            infectiousAt[i] = t + 1 + exposedSteps;
           }
+        } else if (state === 3 && t + 1 === infectiousAt[i]) {
+          state = 1;
         } else if (state === 1 && draws[drawOffset + area + i] < q) {
           state = 2;
-        } else if (state === 3 && --exposureRemaining[i] === 0) {
-          state = 1;
         }
         next[i] = state;
       }
@@ -58,7 +58,7 @@
     return movie;
   }
 
-  function draw(canvas, frames, step, observed) {
+  function draw(canvas, frames, step, observed, reportExposed = false) {
     canvas.width = canvas.height = side * cell;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#FFFFFF';
@@ -72,11 +72,11 @@
     }
     canvas.setAttribute('aria-label', step == null ? 'No visit recorded yet' :
       'Step '+step+', '+counts[1]+' infectious'+(observed ? ' people recorded' :
-      ', '+counts[0]+' susceptible, '+counts[3]+' exposed, '+counts[2]+' recovered'));
+      ', '+counts[0]+' susceptible, '+(reportExposed ? counts[3]+' exposed, ' : '')+counts[2]+' recovered'));
     return counts;
   }
 
-  function createPlayer(prefix) {
+  function createPlayer(prefix, visits = data.visits) {
     const get = name => document.getElementById(prefix + '-' + name);
     const slider = get('time');
     const clock = get('clock');
@@ -90,11 +90,11 @@
 
     function update() {
       const step = Number(slider.value);
-      const visit = data.visits.filter(t => t <= step).at(-1);
+      const visit = visits.filter(t => t <= step).at(-1);
       clock.value = step;
-      const current = draw(states, frames, step, false);
+      const current = draw(states, frames, step, false, prefix === 'delay');
       const observedCounts = draw(observed, frames, visit, true);
-      visitCaption.textContent = visit == null ? 'First visit at step ' + data.visits[0] :
+      visitCaption.textContent = visit == null ? 'First visit at step ' + visits[0] :
         'Last observation · step ' + visit;
       if (stateCaption) {
         stateCaption.textContent = 'Simulated states · ' + current[3] + ' exposed';
@@ -111,13 +111,13 @@
         pause();
         return;
       }
-      if (Number(slider.value) === lastStep) slider.value = 0;
+      if (Number(slider.value) === Number(slider.max)) slider.value = 0;
       update();
       play.textContent = 'Pause';
       timer = setInterval(() => {
         slider.stepUp();
         update();
-        if (Number(slider.value) === lastStep) pause();
+        if (Number(slider.value) === Number(slider.max)) pause();
       }, 350);
     });
     slider.addEventListener('input', () => { pause(); update(); });
@@ -135,6 +135,7 @@
     };
   }
 
+  const immediateFrames = simulateSIR(...data.theta);
   const showParameters = createPlayer('sir');
   const transmission = document.getElementById('sir-p');
   const recovery = document.getElementById('sir-q');
@@ -147,27 +148,22 @@
     const q = Number(recovery.value);
     document.getElementById('sir-p-value').value = p.toFixed(3);
     document.getElementById('sir-q-value').value = q.toFixed(3);
-    showParameters(reset ? recordedFrames : simulate(p, q), reset);
+    showParameters(reset ? immediateFrames : simulateSIR(p, q), reset);
   }
   transmission.addEventListener('input', () => updateParameters());
   recovery.addEventListener('input', () => updateParameters());
   document.getElementById('sir-reset').addEventListener('click', () => updateParameters(true));
   updateParameters(true);
 
-  const showOnset = createPlayer('delay');
-  const onset = document.getElementById('delay-onset');
-  const immediateFrames = simulate(...data.theta, 0);
-  onset.addEventListener('change', () => {
-    showOnset(Number(onset.value) === 0 ? immediateFrames : recordedFrames);
-  });
+  const showOnset = createPlayer('delay', [8, 12, 16]);
+  const fourStepFrames = simulateSIR(...data.theta, 4);
   function resetOnset() {
-    onset.value = String(data.latentSteps);
-    showOnset(recordedFrames, true);
+    showOnset(fourStepFrames, true);
   }
   document.getElementById('delay-reset').addEventListener('click', resetOnset);
   resetOnset();
   for (const canvas of document.querySelectorAll('canvas[data-sir-visit]')) {
-    draw(canvas, recordedFrames, Number(canvas.dataset.sirVisit), true);
+    draw(canvas, immediateFrames, Number(canvas.dataset.sirVisit), true);
   }
 })();
 </script>
